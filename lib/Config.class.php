@@ -17,9 +17,9 @@ class Config {
 		$this->getConfigModuleSQL();
 	}
 	
-	public function getConfigModuleSQL($clear = true)
+	public function getConfigModuleSQL($clear = true): void
 	{
-		if ($clear) { $this->module_conf = array(); }
+		if ($clear) { $this->module_conf = []; }
 		$sql = "SELECT var_name, value FROM endpointman_global_vars";
 		foreach (sql($sql, 'getAll', DB_FETCHMODE_ASSOC) as $row) {
 			$this->module_conf[$row['var_name']] = $row['value'];
@@ -46,10 +46,10 @@ class Config {
 		}
 		return $varreturn;
 	}
-	public function set($var, $val) {
+	public function set($var, $val): void {
 		$this->module_conf[$var] = $val;
 	}
-	public function del($var) { 
+	public function del($var): void { 
 		if ($this->isExiste($var)) { unset($this->module_conf[$var]); } 
 	}
 }

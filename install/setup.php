@@ -12,12 +12,9 @@ class ProvisionerConfig {
     /**
      * Setup anything required to make our provisioner class work
      */
-    public static function setup() {
+    public static function setup(): void {
         // Register auto-loader. When classes are requested that aren't loaded, we'll find them via endpointsAutoload()
-        spl_autoload_register(array(
-            'ProvisionerConfig',
-            'endpointsAutoload'
-        ));
+        spl_autoload_register(['ProvisionerConfig', 'endpointsAutoload']);
     }
 
     public static function endpointsAutoload($class) {

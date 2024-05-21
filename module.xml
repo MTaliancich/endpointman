@@ -2,7 +2,7 @@
 	<rawname>endpointman</rawname>
 	<repo>unsupported</repo>
 	<name>OSS PBX End Point Manager</name>
-	<version>16.0.0.1</version>
+	<version>17.0.0</version>
 	<type>setup</type>
 	<category>Settings</category>
 	<license>GPLv3+</license>
@@ -23,6 +23,7 @@
 		Pull Requests can be made to either of these and are encouraged.
 	</description>
 	<changelog>
+		*17.0.0* Updates for PHP 8.2 and FreePBX 17
 		*16.0.0.1* fix array type bug
 		*16.0.0* Updates for PHP 7.4 and FreePBX 16
 		*14.0.3* Support for PHP 7
@@ -177,11 +178,11 @@
 		</table>
 </database>
 	<depends>
-		<version>14.0</version>
-		<phpversion>5.3.0</phpversion>
+		<version>16.0</version>
+		<phpversion>7.4.0</phpversion>
 	</depends>
 	<supported>
-		<version>14.0</version>
+		<version>16.0</version>
 	</supported>
 	<hooks>
 		<framework namespace="FreePBX\Console\Command" class="Chown">

@@ -83,7 +83,7 @@
                             </div>
                             <div class="panel-body">
                                 <?php 
-								
+
 								//$list_all_files = array();
                                 //if ($dtemplate['alt'] != 0) {
 								//	$list_all_files = array_merge($dtemplate['alt_configs'], $dtemplate['only_configs']);
@@ -91,8 +91,8 @@
 								//else {
 								//	$list_all_files = $dtemplate['only_configs'];
 								//}
-                                
-								
+
+
 								$list_all_files = FreePBX::Endpointman()->epm_templates->edit_template_display_files_list($_REQUEST['idsel'],$_REQUEST['custom']);
                                 foreach($list_all_files as $row): 
 								//config.php?display=epm_templates&subpage=&custom=0&idsel=41
@@ -125,16 +125,16 @@
     		</div>
 		</div>
 	</div>
-	
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
 
 	<?php /*           
 	{if condition="$alt != 0"}
@@ -143,8 +143,8 @@
             <a href="#" onclick="return popitup('config.php?type=tool&display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=alt_cfg_edit', '{$value.name}')">
             <code>{$value.name}</code> <i class='icon-pencil blue' ALT='<?php echo _('Edit')?> {$value.name}'></i></a>
             <br>
-			
-			
+
+
             <strong><?php echo _('Select Alternative File Configurations for')?> <code>{$value.name}</code></strong>
             <select name="{$value.name}" id="altconfig_{$value.name}">';
             <option value="0_{$value.name}">{$value.name} (No Change)</option>';
@@ -156,27 +156,27 @@
         {/loop}
             <br/>
 	{/if}
-    
+
     {loop name="only_configs"}
         <strong><?php echo _('Edit File Configurations for:')?></strong>&nbsp;
         <a href="#" onclick="return popitup2('config.php?type=tool&display=epm_config&amp;quietmode=1&amp;handler=file&amp;file=popup.html.php&amp;module=endpointman&amp;pop_type=alt_cfg_edit', '{$value.name}')"><code>{$value.name}</code>&nbsp;<i class='icon-pencil blue' ALT='<?php echo _('Edit')?>'></i></a>
         <br/>
     {/loop}
 	*/ ?>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
 	<div class="">
 		<div class="row">
 			<div class="col-md-12">
-            
+
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<h3 class="panel-title"><i class="fa  fa-code"></i> <?php echo _("Example of Variables allowed in boxes")?></h3>
@@ -192,16 +192,16 @@
 						</ul>
 					</div>
 				</div>
-                
+
 			</div>
 		</div>
 	</div>
-	
-	
-	
-	
-	
-    
+
+
+
+
+
+
 	<div class="">
 		<div class="row">
 			<div class="col-md-12">
@@ -231,7 +231,7 @@
                                                             <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $srow['key']; ?>"></i>
                                                         </div>
                                                         <div class="col-md-9">
-															<input type="text" class="form-control" id="<?php echo $srow['key']; ?>" name="<?php echo $srow['key']; ?>" placeholder="" value="<?php echo $srow['value']; ?>" size="<?php echo (isset($srow['max_chars']) ? $srow['max_chars'] : "90" ); ?>">
+															<input type="text" class="form-control" id="<?php echo $srow['key']; ?>" name="<?php echo $srow['key']; ?>" placeholder="" value="<?php echo $srow['value']; ?>" size="<?php echo ($srow['max_chars'] ?? "90" ); ?>">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -246,7 +246,7 @@
                                     <?php
 									//END INPUT-TEXT
 									break;
-									
+
 								case 'textarea':
 									//INI TEXTAREA
 									?>
@@ -265,7 +265,7 @@
                                                             <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $srow['key']; ?>"></i>
                                                         </div>
                                                         <div class="col-md-9">
-	                      									<textarea class="form-control" id="<?php echo $srow['key']; ?>" name="<?php echo $srow['key']; ?>" rows="<?php echo (isset($srow['rows']) ? $srow['rows'] : "2" ); ?>" cols="<?php echo (isset($srow['cols']) ? $srow['cols'] : "20" ); ?>"><?php echo $srow['value']; ?></textarea>
+	                      									<textarea class="form-control" id="<?php echo $srow['key']; ?>" name="<?php echo $srow['key']; ?>" rows="<?php echo ($srow['rows'] ?? "2" ); ?>" cols="<?php echo ($srow['cols'] ?? "20" ); ?>"><?php echo $srow['value']; ?></textarea>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -280,7 +280,7 @@
                                     <?php
 									//END TEXTAREA
 									break;
-									
+
 								case 'radio':
 									//INI RADIO
 									?>
@@ -307,7 +307,7 @@
                                                                     //echo '<input type="radio" name="'.$lrow['key'].'" id="'.$lrow['key'].'" value="'.$lrow['value'].'" '.(array_key_exists('checked', $lrow['value']) ? $lrow['checked'] : '').' >';
                                                                     echo '<input type="radio" name="'.$lrow['key'].'" id="'.$lrow['key'].'" value="'.$lrow['value'].'" >';
                                                                     echo '</label>]';
-                                                                    
+
                                                                     <input type="radio" class="form-control" id="addtocdrno" name="addtocdr" value="0" <?php echo ($addtocdr == '1' ? '' : 'CHECKED'); ?>>
                                                                     <label for="addtocdrno"><?php echo _("No")?></label>
                                                                     */
@@ -316,7 +316,7 @@
                                                                 $z++;
 																}
                                                                 ?>
-    
+
                                                             </div>
                                                         </div>
                                                     </div>
@@ -332,7 +332,7 @@
                                     <?php
 									//END RAIDO
 									break;
-									
+
 								case 'list':
 									//INI LIST
 									?>
@@ -375,8 +375,8 @@
                                     <?php
 									//END LIST
 									break;
-									
-									
+
+
 								case 'checkbox':
 									//INI CHEBOX
 									//PENDIENTE UPATEAR.....
@@ -411,7 +411,7 @@
                                     <?php
 									//END CHEKBOX
 									break;
-									
+
 								case 'break':
 									//INI BREAK
 									?>
@@ -429,7 +429,7 @@
                                     <?php
 									//END BREAK
 									break;
-										
+
 								case 'group':
 									//INI group
 									?>
@@ -450,7 +450,7 @@
                                     <?php
 									//END group
 									break;
-											
+
 								case 'header':
 									//INI HEADER
 									?>
@@ -471,7 +471,7 @@
 									//END HEADER
 									break;
 							}
-							
+
 							if (isset($srow['aried'])) {
 								//INI ARIED
 								?>
@@ -481,7 +481,7 @@
 											<div class="row">
 												<div class="form-group">
 													<div class="col-md-12">
-														<?php echo '<label><input type="checkbox" name="ari_'.$srow['ari']['key'].'" '.(isset($srow['ari']['checked']) ? $srow['ari']['checked'] : '' ).' >End User Editable (<a href="http://projects.colsolgrp.net/documents/29" target="_blank">Through ARI Module</a>)</label>'; ?>
+														<?php echo '<label><input type="checkbox" name="ari_'.$srow['ari']['key'].'" '.($srow['ari']['checked'] ?? '' ).' >End User Editable (<a href="http://projects.colsolgrp.net/documents/29" target="_blank">Through ARI Module</a>)</label>'; ?>
 													</div>
 												</div>
 											</div>
@@ -491,16 +491,16 @@
 								<?php
 								//END ARIEND
 							}
-							
+
 						} //END foreach objetos de cada tabs
 						?>
 	                    </div>
-					<?php endforeach; ?> <!-- END foreach tabs -->
+<?php endforeach; ?> <!-- END foreach tabs -->
 				</div>
     		</div>
 	    </div>
     </div>
-    
+
 </form>
 <?php 
 
@@ -530,7 +530,7 @@ return;
 	<button type="submit" name="button_save_template"><i class='icon-save blue'></i> <?php echo _('Save Template');?></button>
 
 
-	
+
 	<div class="coda-slider-wrapper">
 		<div class="coda-slider preload" id="coda-slider-9">
 		<?php 
@@ -539,8 +539,8 @@ return;
 			<div class="panel">
 				<div class="panel-wrapper">
 					<h2 class="title"><?php echo $row['title'];?></h2>
-					
-					
+
+
 					<table width="100%" border="0" cellspacing="0" cellpadding="0">
 						<?php
 						foreach($row['data'] as $srow) {
@@ -549,11 +549,11 @@ return;
 								case 'input':
 									echo '<td nowrap>'.(! isset($srow['tooltip']) ? $srow['description'] : '<a href="#" class="info">'.$srow['description'].'<span>'.$srow['tooltip'].'</span></a>').':</td><td nowrap><input type="text" name="'.$srow['key'].'" id="'.$srow['key'].'" value="'.$srow['value'].'" size="'.(isset($srow['max_chars']) ? $srow['max_chars'] : "90" ).'">';
 									break;
-									
+
 								case 'textarea':
 									echo '<td nowrap>'.(! isset($srow['tooltip']) ? $srow['description'] : '<a href="#" class="info">'.$srow['description'].'<span>'.$srow['tooltip'].'</span></a>').':</td><td nowrap><textarea rows="'.(isset($srow['rows']) ? $srow['rows'] : "2" ).'" cols="'.(isset($srow['cols']) ? $srow['cols'] : "20" ).'" name="'.$srow['key'].'" id="'.$srow['key'].'">'.$srow['value'].'</textarea>';
 									break;
-									
+
 								case 'radio':
 									echo '<td nowrap>'.(! isset($srow['tooltip']) ? $srow['description'] : '<a href="#" class="info">'.$srow['description'].'<span>'.$srow['tooltip'].'</span></a>').':</td><td nowrap>';
 									foreach($srow['data'] as $lrow) {
@@ -564,7 +564,7 @@ return;
 										echo '</label>]';
 									}
 									break;
-									
+
 								case 'list':
 									echo '<td nowrap>'.(! isset($srow['tooltip']) ? $srow['description'] : '<a href="#" class="info">'.$srow['description'].'<span>'.$srow['tooltip'].'</span></a>').':</td><td nowrap>';
 									echo '<select name="'.$srow['key'].'" id="'.$srow['key'].'">';
@@ -575,25 +575,25 @@ return;
 									}
 									echo '</select>';
 									break;
-									
-									
+
+
 								case 'checkbox':
 									echo '<td nowrap>'.(! isset($srow['tooltip']) ? $srow['description'] : '<a href="#" class="info">'.$srow['description'].'<span>'.$srow['tooltip'].'</span></a>').':</td><td nowrap><input type="checkbox" name="'.$srow['key'].'" id="'.$srow['key'].'" value="'.$srow['value'].'">';
 									break;
-									
+
 								case 'break':
 									echo '<td nowrap colspan="2">&nbsp;';
 									break;
-										
+
 								case 'group':
 									echo '<td nowrap colspan="2"><hr><h3>'.(! isset($srow['tooltip']) ? $srow['description'] : '<a href="#" class="info">'.$srow['description'].'<span>'.$srow['tooltip'].'</span></a>').'</H3>';
 									break;
-											
+
 								case 'header':
 									echo '<td nowrap colspan="2"><strong>'.(! isset($srow['tooltip']) ? $srow['description'] : '<a href="#" class="info">'.$srow['description'].'<span>'.$srow['tooltip'].'</span></a>').'</strong>';
 									break;
 							}
-							
+
 							if (isset($srow['aried'])) {
 								echo '<label><input type="checkbox" name="ari_'.$srow['ari']['key'].'" '.(isset($srow['ari']['checked']) ? $srow['ari']['checked'] : '' ).' >End User Editable (<a href="http://projects.colsolgrp.net/documents/29" target="_blank">Through ARI Module</a>)</label></td>';
 							}
@@ -604,8 +604,8 @@ return;
 						}
 						?>
 					</table>
-					
-					
+
+
 				</div>
 			</div>
 		<?php	
@@ -661,7 +661,7 @@ if($default_display) {
 		$row_out[$i]['name'] = $row['mac'] . "-(" .$description.")";
 		$i++;
 	}
-	
+
  	$sql = "SELECT DISTINCT endpointman_product_list.* FROM endpointman_product_list, endpointman_model_list WHERE endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_model_list.hidden = 0 AND endpointman_model_list.enabled = 1 AND endpointman_product_list.hidden != 1 AND endpointman_product_list.cfg_dir !=  ''";
  	$template_list =& $db->getAll($sql, array(), DB_FETCHMODE_ASSOC);
  	$i = 1;
@@ -701,7 +701,7 @@ if($default_display) {
                 if (window.focus) {newwindow.focus()}
                 return false;
         }
-		
+
         function popitup3(url) {
             newwindow=window.open(url + '&custom=' + document.getElementById('custom').value + '&tid=' + document.getElementById('id').value + '&value=0_' + name + '&rand=' + new Date().getTime(),'name','height=700,width=800,scrollbars=yes,location=no');
                 if (window.focus) {newwindow.focus()}

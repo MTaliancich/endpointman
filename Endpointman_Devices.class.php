@@ -11,21 +11,18 @@ namespace FreePBX\modules;
 
 class Endpointman_Devices
 {
-	public function __construct($freepbx = null, $cfgmod = null) 
+	public $db;
+ public $config;
+ public function __construct(public $freepbx = null, public $configmod = null) 
 	{
-		$this->freepbx = $freepbx;
-		$this->db = $freepbx->Database;
-		$this->config = $freepbx->Config;
-		$this->configmod = $cfgmod;			
+		$this->db = $this->freepbx->Database;
+		$this->config = $this->freepbx->Config;			
 	}
 
-	public function myShowPage(&$pagedata) {
+	public function myShowPage(&$pagedata): void {
 		if(empty($pagedata))
 		{
-			$pagedata['main'] = array(
-					"name" => _("Devices"),
-					"page" => 'views/epm_devices_main.page.php'
-			);
+			$pagedata['main'] = ["name" => _("Devices"), "page" => 'views/epm_devices_main.page.php'];
 		}
 	}
 
@@ -49,12 +46,12 @@ class Endpointman_Devices
 			switch ($command)
 			{
 				default:
-					$retarr = array("status" => false, "message" => _("Command not found!") . " [" .$command. "]");
+					$retarr = ["status" => false, "message" => _("Command not found!") . " [" .$command. "]"];
 					break;
 			}
 		}
 		else {
-			$retarr = array("status" => false, "message" => _("Tab not found!") . " [" .$module_tab. "]");
+			$retarr = ["status" => false, "message" => _("Tab not found!") . " [" .$module_tab. "]"];
 		}
 		return $retarr;
 	}

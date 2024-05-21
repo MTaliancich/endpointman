@@ -1,13 +1,6 @@
 <?php
-$list = array(
-			'epm_oss' 			=> _('About OSS Endpoint Manager'),
-			'epm_advanced'	=> _('Settings'),
-			'epm_devices'	=> _('Extension Mapping'),
-			'epm_config'	=>  _('Package Manager'),
-			'epm_templates'	=>  _('Template Manager'),
-			'epm_placeholders'	=>  _('Config File Placeholders')
-		);
-$li = array();
+$list = ['epm_oss' 			=> _('About OSS Endpoint Manager'), 'epm_advanced'	=> _('Settings'), 'epm_devices'	=> _('Extension Mapping'), 'epm_config'	=>  _('Package Manager'), 'epm_templates'	=>  _('Template Manager'), 'epm_placeholders'	=>  _('Config File Placeholders')];
+$li = [];
 		
 foreach ($list as $k => $v) {
 	// If current user does not have access to this sub-menu then don't display it

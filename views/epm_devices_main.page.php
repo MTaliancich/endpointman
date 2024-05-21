@@ -21,11 +21,11 @@
 	$searched = NULL;
 	$edit = NULL;
 	$mode = NULL;
-	
+
 	$family_list = FreePBX::Endpointman()->eda->all_products();
 	$full_device_list = FreePBX::Endpointman()->eda->all_devices();
 	$ava_exts = FreePBX::Endpointman()->display_registration_list();
-	
+
 	if((empty($family_list)) && (empty($full_device_list))) 
 	{
 		echo '<div class="alert alert-warning" role="alert">';
@@ -44,26 +44,26 @@
 		//$no_add = TRUE;
 	}
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+
+
 
 	//Refresh the list after processing
 	$devices_list = $full_device_list;
-	
+
 	$i = 0;
-	$list = array();
+	$list = [];
 	$device_statuses = shell_exec(FreePBX::Endpointman()->configmod->get("asterisk_location")." -rx 'sip show peers'");
-	
+
 	$device_statuses = explode("\n", $device_statuses);
-	$devices_status = array();
+	$devices_status = [];
 	foreach($device_statuses as $key => $data) {
 		preg_match('/(\d*)\/[\d]*/i', $data, $extout);
 		preg_match('/\b(?:\d{1,3}\.){3}\d{1,3}\b/i', $data, $ipaddress);
@@ -76,7 +76,7 @@
 			}
 		}
 	}
-	
+
 	foreach($devices_list as $devices_row) {
 		$line_list = FreePBX::Endpointman()->eda->get_lines_from_device($devices_row['id']);
 		$list[$i] = $devices_row;
@@ -104,34 +104,34 @@
 			$z++;
 		}
 		$ext = $list[$i]['line'][0]['ext'];
-	
-		$list[$i]['status']['status'] = isset($devices_status[$ext]['status']) ?$devices_status[$ext]['status'] : FALSE;
-		$list[$i]['status']['ip'] = isset($devices_status[$ext]['ip']) ? $devices_status[$ext]['ip'] : FALSE;
+
+		$list[$i]['status']['status'] = $devices_status[$ext]['status'] ?? FALSE;
+		$list[$i]['status']['ip'] = $devices_status[$ext]['ip'] ?? FALSE;
 		$list[$i]['status']['port'] = '';
 		$i++;
 	}
-	
+
 	$unknown_list = FreePBX::Endpointman()->eda->all_unknown_devices();
-	
+
 	foreach($unknown_list as $row) {	#Displays unknown phones in the database with edit and delete buttons
 		$list[$i] = $row;
-	
+
 		$brand_info = FreePBX::Endpointman()->get_brand_from_mac($row['mac']);
-	
+
 		$list[$i]['name'] = $brand_info['name'];
 		$list[$i]['template_name'] = "N/A";
 		$list[$i]['model'] = _("Unknown");
 		$i++;
 	}
-	
+
 $amp_send['AMPDBUSER'] = $amp_conf['AMPDBUSER'];
 $amp_send['AMPDBPASS'] = $amp_conf['AMPDBPASS'];
 $amp_send['AMPDBNAME'] = $amp_conf['AMPDBNAME'];
-	
+
 	$sql = "SELECT DISTINCT endpointman_product_list.* FROM endpointman_product_list, endpointman_model_list WHERE endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_model_list.hidden = 0 AND endpointman_model_list.enabled = 1 AND endpointman_product_list.hidden != 1 AND endpointman_product_list.cfg_dir !=  ''";
 	$template_list = sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
 	$i = 1;
-	$product_list = array();
+	$product_list = [];
 	$product_list[0]['value'] = 0;
 	$product_list[0]['text'] = "";
 	foreach($template_list as $row) {
@@ -139,11 +139,11 @@ $amp_send['AMPDBNAME'] = $amp_conf['AMPDBNAME'];
 		$product_list[$i]['text'] = $row['short_name'];
 		$i++;
 	}
-	
+
 	$sql = "SELECT DISTINCT endpointman_model_list.* FROM endpointman_product_list, endpointman_model_list WHERE endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_model_list.hidden = 0 AND endpointman_model_list.enabled = 1 AND endpointman_product_list.hidden != 1 AND endpointman_product_list.cfg_dir !=  ''";
 	$template_list = sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
 	$i = 1;
-	$model_list = array();
+	$model_list = [];
 	$model_list[0]['value'] = 0;
 	$model_list[0]['text'] = "";
 	foreach($template_list as $row) {
@@ -151,13 +151,13 @@ $amp_send['AMPDBNAME'] = $amp_conf['AMPDBNAME'];
 		$model_list[$i]['text'] = $row['model'];
 		$i++;
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 /*
-	
+
 $endpoint->tpl->assign("list", $list);
 
 $serv_address = !empty($endpoint->global_cfg['nmap_search']) ? $endpoint->global_cfg['nmap_search'] : $_SERVER["SERVER_ADDR"].'/24';
@@ -181,7 +181,7 @@ $endpoint->tpl->assign("searched", $searched);
 $endpoint->tpl->assign("edit", $edit);
 $endpoint->tpl->assign("amp_conf_serial", base64_encode(serialize($amp_send)));
 $endpoint->tpl->assign("mode", $mode);
-	
+
 $edit_row['id'] = isset($edit_row['id']) ? $edit_row['id'] : '0';
 $endpoint->tpl->assign("edit_id", $edit_row['id']);
 
@@ -213,24 +213,24 @@ if (isset($mode) && ($mode == "EDIT")) {
 			$endpoint->tpl->assign("disabled_delete_line", 1);
 		}
 		$endpoint->tpl->assign("line_list_edit", $edit_row['line']);
-	
+
 		$endpoint->tpl->assign("brand_id", $edit_row['brand_id']);
 		$endpoint->tpl->assign("models_ava", $ma);
 
 		$endpoint->tpl->assign("display_templates", $endpoint->display_templates($edit_row['product_id'],$edit_row['template_id']));
-	
+
 	} else {
 		$message = _("You have disabled/removed all models that correspond to this brand. Please enable them in 'Brand Configurations/Setup' before trying to edit this phone");
 		$endpoint->tpl->assign("mode", NULL);
 	}
 }
 */
-	
-		
-	
-	
-	
-	
+
+
+
+
+
+
 	//echo load_view(__DIR__.'/epm_templates/main.views.grid.php', array('request' => $_REQUEST));
 	//echo load_view(__DIR__.'/epm_templates/main.views.new.modal.php', array('request' => $_REQUEST));
 ?>
@@ -297,7 +297,7 @@ if (isset($mode) && ($mode == "EDIT")) {
 				</select>
 				</label>
     		</td>
-    
+
     		<td align='center'>
     			<label>  
     				<div id="demo">
@@ -320,9 +320,9 @@ if (isset($mode) && ($mode == "EDIT")) {
 				<button type='reset'><i class='icon-rotate-left red'></i> <?php echo _('Reset')?>{/if}
 			</td>
 		</tr>
-			
-			
-	
+
+
+
 		<!-- 
 		{loop name="line_list_edit"}
 		<tr>
@@ -475,10 +475,10 @@ return;
     </tr>
     </thead>
     <tbody>
-    
-    
+
+
     $list
-    
+
 	{loop name="list"}
         <tr class="headerRow">
             <td align='center' width="7%"><i class="icon-off icon-large {if condition="$value.status.status === TRUE"}green{else}red{/if}" alt="{$value.status.ip}:{$value.status.port}"></i><input type="checkbox" class="device" name="selected[]" value="{$value.id}"></td>
@@ -491,7 +491,7 @@ return;
             <td align='center' width='6%'><div id="demo"><a href="#" onclick="submit_wtype('edit',{$value.id});"><i class='blue icon-pencil' alt='<?php echo _('Edit')?>' title="Edit phone"></i></a></div></td>
             <td align='center' width='7%'><div id="demo"><a href="#" onclick="delete_device({$value.id});"><i class='red icon-trash' alt='<?php echo _('Delete')?>' title="Delete phone"></i></a></div></td>
         </tr>
-        
+
         {loop name="value.line"}
         <tr class="rowGroup{$value.master_id} toggle_all" id="{$value.master_id}" style="display:none;">
             <td align='center' width='7%' ></td>
@@ -505,9 +505,9 @@ return;
             <td align='center' width='7%'><div id="demo"><a href="#" onclick="submit_wtype('delete_line',{$value.luid});"><i class="red icon-remove" alt='<?php echo _('Delete')?>' title='Delete Line'></i></a></div></td>
         </tr>
         {/loop}
-        
+
 	{/loop}
-	
+
     </tbody>
 </table>
 
@@ -881,9 +881,9 @@ if((isset($_REQUEST['sub_type'])) AND ((!$no_add) OR (($_REQUEST['sub_type'] == 
 
 switch ($sub_type) {
     //Edit Mode
-	
-	
-	
+
+
+
     case "edit":
         $mode = "EDIT";
         switch ($sub_type_sub) {
@@ -941,10 +941,10 @@ switch ($sub_type) {
         $edit_row=$endpoint->get_phone_info($_REQUEST['edit_id']);
         $edit_row['id'] = $_REQUEST['edit_id'];
         break;
-		
-		
-		
-		
+
+
+
+
     case "add" :
         $mac_id = $endpoint->add_device($_REQUEST['mac'],$_REQUEST['model_list'],$_REQUEST['ext_list'],$_REQUEST['template_list'],$_REQUEST['line_list']);
         if($mac_id) {
@@ -952,10 +952,10 @@ switch ($sub_type) {
             $endpoint->prepare_configs($phone_info);
         }
         break;
-		
-		
-		
-		
+
+
+
+
     case "edit_template" :
         if(empty($_REQUEST['edit_id'])) {
             $endpoint->error['page:devices_manager'] = _("No Device Selected to Edit!")."!";
@@ -970,9 +970,9 @@ switch ($sub_type) {
             }
         }
         break;
-		
-		
-		
+
+
+
     case "delete_selected_phones":
         if(isset($_REQUEST['selected'])) {
             foreach($_REQUEST['selected'] as $key => $data) {
@@ -982,22 +982,22 @@ switch ($sub_type) {
             $endpoint->error['page:devices_manager'] = _("No Phones Selected")."!";
         }
         break;
-		
-		
-		
+
+
+
     case "delete_device":
         $endpoint->delete_device($_REQUEST['edit_id']);
         break;
-		
-		
-		
+
+
+
     case "delete_line" :
         $endpoint->delete_line($_REQUEST['edit_id']);
         break;
-		
-		
-		
-		
+
+
+
+
     case "rebuild_selected_phones":
         if(isset($_REQUEST['selected'])) {
             foreach($_REQUEST['selected'] as $key => $data) {
@@ -1015,10 +1015,10 @@ switch ($sub_type) {
             $endpoint->message['page:devices_manager'] = _("No Phones Selected")."!";
         }
         break;
-		
-		
-		
-		
+
+
+
+
     case "rebuild_configs_for_all_phones" :
         $sql = "SELECT endpointman_mac_list.id FROM endpointman_mac_list, endpointman_brand_list, endpointman_product_list, endpointman_model_list WHERE endpointman_brand_list.id = endpointman_product_list.brand AND endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_mac_list.model = endpointman_model_list.id ORDER BY endpointman_product_list.cfg_dir ASC";
         $mac_list =& $endpoint->eda->sql($sql,'getAll',DB_FETCHMODE_ASSOC);
@@ -1038,10 +1038,10 @@ switch ($sub_type) {
             }
             $endpoint->message['page:devices_manager'] = "Rebuilt Configs ".$rebooted_msg." All Phones";
         break;
-		
-		
-		
-		
+
+
+
+
     case "reboot_brand" :
         if($_REQUEST['rb_brand'] != "") {
             $sql = 'SELECT endpointman_mac_list.id FROM endpointman_mac_list , endpointman_model_list , endpointman_brand_list , endpointman_product_list WHERE endpointman_brand_list.id = endpointman_model_list.brand AND endpointman_model_list.id = endpointman_mac_list.model AND endpointman_model_list.product_id = endpointman_product_list.id AND endpointman_brand_list.id = '.$_REQUEST['rb_brand'].' ORDER BY endpointman_product_list.cfg_dir ASC';
@@ -1082,7 +1082,7 @@ switch ($sub_type) {
                     $provisioner_lib->brand_name = $phone_info['directory'];
                     $provisioner_lib->family_line = $phone_info['cfg_dir'];
 
-                    $provisioner_lib->settings['line'][0] = array('username' => $phone_info['line'][1]['ext'], 'authname' => $phone_info['line'][1]['ext']);
+                    $provisioner_lib->settings['line'][0] = ['username' => $phone_info['line'][1]['ext'], 'authname' => $phone_info['line'][1]['ext']];
                     $provisioner_lib->reboot();
                     unset($provisioner_lib);
                 }
@@ -1094,10 +1094,10 @@ switch ($sub_type) {
             $endpoint->error['page:devices_manager'] = _("No Brand Selected for Reboot");
         }
         break;
-		
-		
-		
-		
+
+
+
+
     case "go" :
         $sql = "UPDATE endpointman_global_vars SET value = '".$_REQUEST['netmask']."' WHERE var_name = 'nmap_search'";
         $endpoint->eda->sql($sql);
@@ -1128,10 +1128,10 @@ switch ($sub_type) {
         }
         $searched = 1;
         break;
-		
-		
-		
-		
+
+
+
+
     case "add_selected_phones" :
         if(isset($_REQUEST['add'])) {
             foreach($_REQUEST['add'] as $num) {
@@ -1147,10 +1147,10 @@ switch ($sub_type) {
             }
         }
         break;
-		
-		
-		
-		
+
+
+
+
     case "change_brand" :
         if(isset($_REQUEST['selected'])) {
             if(($_REQUEST['brand_list_selected'] > 0) AND ($_REQUEST['model_list_selected'] > 0)) {
@@ -1176,9 +1176,9 @@ switch ($sub_type) {
             $endpoint->error['page:devices_manager'] = _("No Phones Selected!");
         }
         break;
-		
-		
-		
+
+
+
     case "rebuild_reboot" :
         if($_REQUEST['product_select'] == "") {
             $message = _("Please select a product");
@@ -1206,9 +1206,9 @@ switch ($sub_type) {
             $endpoint->message['page:devices_manager'] = "Rebuilt Configs " . $rebooted_msg;
         }
         break;
-		
-		
-		
+
+
+
     case "mrebuild_reboot" :
         if($_REQUEST['model_select'] == "") {
             $message = _("Please select a model");

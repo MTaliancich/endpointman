@@ -12,17 +12,16 @@ use FreePBX;
 
 class Endpointman_Advanced
 {
+    public $db;
+    public $config;
     public $MODULES_PATH;
 	public $LOCAL_PATH;
 	public $PHONE_MODULES_PATH;
 
-	public function __construct($freepbx = null, $cfgmod = null, $epm_config)
+	public function __construct(public $epm_config, public $freepbx = null, public $configmod = null)
 	{
-		$this->freepbx = $freepbx;
-		$this->db = $freepbx->Database;
-		$this->config = $freepbx->Config;
-		$this->configmod = $cfgmod;
-		$this->epm_config = $epm_config;
+		$this->db = $this->freepbx->Database;
+		$this->config = $this->freepbx->Config;
 
         $this->MODULES_PATH = $this->config->get('AMPWEBROOT') . '/admin/modules/';
         if (file_exists($this->MODULES_PATH . "endpointman/")) {
@@ -46,34 +45,19 @@ class Endpointman_Advanced
         }
 	}
 
-	public function myShowPage(&$pagedata) {
+	public function myShowPage(&$pagedata): void {
 		if(empty($pagedata))
 		{
-			$pagedata['settings'] = array(
-				"name" => _("Settings"),
-				"page" => 'views/epm_advanced_settings.page.php'
-			);
-			$pagedata['oui_manager'] = array(
-				"name" => _("OUI Manager"),
-				"page" => 'views/epm_advanced_oui_manager.page.php'
-			);
-			$pagedata['poce'] = array(
-				"name" => _("Product Configuration Editor"),
-				"page" => 'views/epm_advanced_poce.page.php'
-			);
-			$pagedata['iedl'] = array(
-				"name" => _("Import/Export My Devices List"),
-				"page" => 'views/epm_advanced_iedl.page.php'
-			);
-			$pagedata['manual_upload'] = array(
-				"name" => _("Package Import/Export"),
-				"page" => 'views/epm_advanced_manual_upload.page.php'
-			);
+			$pagedata['settings'] = ["name" => _("Settings"), "page" => 'views/epm_advanced_settings.page.php'];
+			$pagedata['oui_manager'] = ["name" => _("OUI Manager"), "page" => 'views/epm_advanced_oui_manager.page.php'];
+			$pagedata['poce'] = ["name" => _("Product Configuration Editor"), "page" => 'views/epm_advanced_poce.page.php'];
+			$pagedata['iedl'] = ["name" => _("Import/Export My Devices List"), "page" => 'views/epm_advanced_iedl.page.php'];
+			$pagedata['manual_upload'] = ["name" => _("Package Import/Export"), "page" => 'views/epm_advanced_manual_upload.page.php'];
 		}
 	}
 
 	public function ajaxRequest($req, &$setting) {
-		$arrVal = array("oui", "oui_add", "oui_del", "poce_list_brands","poce_select", "poce_select_file", "poce_save_file", "poce_save_as_file", "poce_sendid", "poce_delete_config_custom", "list_files_brands_export", "saveconfig");
+		$arrVal = ["oui", "oui_add", "oui_del", "poce_list_brands", "poce_select", "poce_select_file", "poce_save_file", "poce_save_as_file", "poce_sendid", "poce_delete_config_custom", "list_files_brands_export", "saveconfig"];
 		if (in_array($req, $arrVal)) {
 			$setting['authenticate'] = true;
 			$setting['allowremote'] = false;
@@ -84,26 +68,15 @@ class Endpointman_Advanced
 
     public function ajaxHandler($module_tab = "", $command = "")
 	{
-		$txt = array();
-		$txt['settings'] = array(
-			'error' => _("Error!"),
-			'save_changes' => _("Saving Changes..."),
-			'save_changes_ok' => _("Saving Changes... Ok!"),
-			'opt_invalid' => _("Invalid Option!")
-		);
+		$txt = [];
+		$txt['settings'] = ['error' => _("Error!"), 'save_changes' => _("Saving Changes..."), 'save_changes_ok' => _("Saving Changes... Ok!"), 'opt_invalid' => _("Invalid Option!")];
 
 		if ($module_tab == "settings")
 		{
-			switch ($command)
-			{
-				case "saveconfig":
-					$retarr = $this->epm_advanced_settings_saveconfig();
-					break;
-
-				default:
-					$retarr = array("status" => false, "message" => _("Command not found!") . " [" .$command. "]");
-					break;
-			}
+			$retarr = match ($command) {
+       "saveconfig" => $this->epm_advanced_settings_saveconfig(),
+       default => ["status" => false, "message" => _("Command not found!") . " [" .$command. "]"],
+   };
 			$retarr['txt'] = $txt['settings'];
 		}
 		elseif ($module_tab == "oui_manager") {
@@ -113,9 +86,9 @@ class Endpointman_Advanced
 					//$sql = 'SELECT endpointman_oui_list.id, endpointman_oui_list.oui , endpointman_brand_list.name, endpointman_oui_list.custom FROM endpointman_oui_list , endpointman_brand_list WHERE endpointman_oui_list.brand = endpointman_brand_list.id ORDER BY endpointman_oui_list.oui ASC';
 					$sql = 'SELECT T1.id, T1.oui, T2.name, T1.custom FROM endpointman_oui_list as T1 , endpointman_brand_list as T2 WHERE T1.brand = T2.id ORDER BY T1.oui ASC';
 					$data = sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
-					$ret = array();
+					$ret = [];
 					foreach ($data as $item) {
-						$ret[] = array('id' => $item['id'], 'oui' => $item['oui'], 'brand' => $item['name'], 'custom' => $item['custom']);
+						$ret[] = ['id' => $item['id'], 'oui' => $item['oui'], 'brand' => $item['name'], 'custom' => $item['custom']];
 					}
 					return $ret;
 					break;
@@ -129,7 +102,7 @@ class Endpointman_Advanced
 					break;
 
 				default:
-					$retarr = array("status" => false, "message" => _("Command not found!") . " [" .$command. "]");
+					$retarr = ["status" => false, "message" => _("Command not found!") . " [" .$command. "]"];
 					break;
 			}
 			//$retarr['txt'] = $txt['settings'];
@@ -138,64 +111,36 @@ class Endpointman_Advanced
 			switch ($command)
 			{
 				default:
-					$retarr = array("status" => false, "message" => _("Command not found!") . " [" .$command. "]");
+					$retarr = ["status" => false, "message" => _("Command not found!") . " [" .$command. "]"];
 					break;
 			}
 			//$retarr['txt'] = $txt['settings'];
 		}
 		elseif ($module_tab == "poce") {
-			switch ($command)
-			{
-				case "poce_list_brands":
-					$retarr = $this->epm_advanced_poce_list_brands();
-					break;
-
-				case "poce_select":
-					$retarr = $this->epm_advanced_poce_select();
-					break;
-
-				case "poce_select_file":
-					$retarr = $this->epm_advanced_poce_select_file();
-					break;
-
-				case "poce_save_file":
-				case "poce_save_as_file":
-					$retarr = $this->epm_advanced_poce_save_file();
-					break;
-
-				case "poce_sendid":
-					$retarr = $this->epm_advanced_poce_sendid();
-					break;
-
-				case "poce_delete_config_custom":
-					$retarr = $this->epm_advanced_poce_delete_config_custom();
-					break;
-
-				default:
-					$retarr = array("status" => false, "message" => _("Command not found!") . " [" .$command. "]");
-					break;
-			}
+			$retarr = match ($command) {
+       "poce_list_brands" => $this->epm_advanced_poce_list_brands(),
+       "poce_select" => $this->epm_advanced_poce_select(),
+       "poce_select_file" => $this->epm_advanced_poce_select_file(),
+       "poce_save_file", "poce_save_as_file" => $this->epm_advanced_poce_save_file(),
+       "poce_sendid" => $this->epm_advanced_poce_sendid(),
+       "poce_delete_config_custom" => $this->epm_advanced_poce_delete_config_custom(),
+       default => ["status" => false, "message" => _("Command not found!") . " [" .$command. "]"],
+   };
 			//$retarr['txt'] = $txt['settings'];
 		}
 		elseif ($module_tab == "manual_upload") {
-			switch ($command)
-			{
-				case "list_files_brands_export":
-					$retarr = $this->epm_advanced_manual_upload_list_files_brans_export();
-					break;
-
-				default:
-					$retarr = array("status" => false, "message" => _("Command not found!") . " [" .$command. "]");
-					break;
-			}
+			$retarr = match ($command) {
+       "list_files_brands_export" => $this->epm_advanced_manual_upload_list_files_brans_export(),
+       default => ["status" => false, "message" => _("Command not found!") . " [" .$command. "]"],
+   };
 		}
 		else {
-			$retarr = array("status" => false, "message" => _("Tab is not valid!") . " [" .$module_tab. "]");
+			$retarr = ["status" => false, "message" => _("Tab is not valid!") . " [" .$module_tab. "]"];
 		}
 		return $retarr;
 	}
 
-	public function doConfigPageInit($module_tab = "", $command = "") {
+	public function doConfigPageInit($module_tab = "", $command = ""): void {
 		switch ($module_tab)
 		{
 			case "oui_manager":
@@ -270,61 +215,61 @@ class Endpointman_Advanced
 
 	private function epm_advanced_settings_saveconfig ()
 	{
-		$arrVal['VAR_REQUEST'] = array("name", "value");
+		$arrVal['VAR_REQUEST'] = ["name", "value"];
 		foreach ($arrVal['VAR_REQUEST'] as $valor) {
 			if (! array_key_exists($valor, $_REQUEST)) {
-				return array("status" => false, "message" => _("No send value!")." [".$valor."]");
+				return ["status" => false, "message" => _("No send value!")." [".$valor."]"];
 			}
 		}
 
-		$dget['name'] = strtolower($_REQUEST['name']);
+		$dget['name'] = strtolower((string) $_REQUEST['name']);
 		$dget['value'] = $_REQUEST['value'];
 
 		switch($dget['name']) {
 			case "enable_ari":
-				$dget['value'] = strtolower($dget['value']);
+				$dget['value'] = strtolower((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . ($dget['value'] == "yes" ? "1": "0") . "' WHERE var_name='enable_ari'";
 				break;
 
 			case "enable_debug":
-				$dget['value'] = strtolower($dget['value']);
+				$dget['value'] = strtolower((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . ($dget['value'] == "yes" ? "1": "0") . "' WHERE var_name='debug'";
 				break;
 
 			case "disable_help":
-				$dget['value'] = strtolower($dget['value']);
+				$dget['value'] = strtolower((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . ($dget['value'] == "yes" ? "1": "0") . "' WHERE var_name='disable_help'";
 				break;
 	
 			case "disable_endpoint_warning":
-				$dget['value'] = strtolower($dget['value']);
+				$dget['value'] = strtolower((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . ($dget['value'] == "yes" ? "1": "0") . "' WHERE var_name='disable_endpoint_warning'";
 				break;
 
 			case "allow_dupext":
-				$dget['value'] = strtolower($dget['value']);
+				$dget['value'] = strtolower((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . ($dget['value'] == "yes" ? "1": "0") . "' WHERE var_name='show_all_registrations'";
 				break;
 
 			case "allow_hdfiles":
-				$dget['value'] = strtolower($dget['value']);
+				$dget['value'] = strtolower((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . ($dget['value'] == "yes" ? "1": "0") . "' WHERE var_name='allow_hdfiles'";
 				break;
 
 			case "tftp_check":
-				$dget['value'] = strtolower($dget['value']);
+				$dget['value'] = strtolower((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . ($dget['value'] == "yes" ? "1": "0") . "' WHERE var_name='tftp_check'";
 				break;
 
 			case "backup_check":
-				$dget['value'] = strtolower($dget['value']);
+				$dget['value'] = strtolower((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . ($dget['value'] == "yes" ? "1": "0") . "' WHERE var_name='backup_check'";
 				break;
 
 			case "use_repo":
-				$dget['value'] = strtolower($dget['value']);
+				$dget['value'] = strtolower((string) $dget['value']);
 				if (($dget['value'] == "yes") and (! $this->has_git())) {
-					$retarr = array("status" => false, "message" => _("Git not installed!"));
+					$retarr = ["status" => false, "message" => _("Git not installed!")];
 				}
 				else {
 					$sql = "UPDATE endpointman_global_vars SET value='" . ($dget['value'] == "yes" ? "1": "0") . "' WHERE var_name='use_repo'";
@@ -332,7 +277,7 @@ class Endpointman_Advanced
 				break;
 
 			case "config_loc":
-				$dget['value'] = trim($dget['value']);
+				$dget['value'] = trim((string) $dget['value']);
 				//No trailing slash. Help the user out and add one :-)
 				if ($dget['value'][strlen($dget['value']) - 1] != "/") {
 					$dget['value'] = $dget['value'] . "/";
@@ -342,22 +287,22 @@ class Endpointman_Advanced
 						if (is_writable($dget['value'] = $dget['value'])) {
 							$sql = "UPDATE endpointman_global_vars SET value='" . $dget['value'] . "' WHERE var_name='config_location'";
 						} else {
-							$retarr = array("status" => false, "message" => _("Directory Not Writable!"));
+							$retarr = ["status" => false, "message" => _("Directory Not Writable!")];
 						}
 					} else {
-						$retarr = array("status" => false, "message" => _("Not a Vaild Directory.<br /> Try to run 'mkdir " . $_POST['config_loc'] . "' as root."));
+						$retarr = ["status" => false, "message" => _("Not a Vaild Directory.<br /> Try to run 'mkdir " . $_POST['config_loc'] . "' as root.")];
 					}
 				} else {
-					$retarr = array("status" => false, "message" => _("No Configuration Location Defined!"));
+					$retarr = ["status" => false, "message" => _("No Configuration Location Defined!")];
 				}
 				break;
 
 			case "srvip":
-				$dget['value'] = trim($dget['value']);
+				$dget['value'] = trim((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . $dget['value'] . "' WHERE var_name='srvip'";
 				break;
 			case "intsrvip":
-				$dget['value'] = trim($dget['value']);
+				$dget['value'] = trim((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . $dget['value'] . "' WHERE var_name='intsrvip'";
 				break;
 			case "tz":
@@ -365,16 +310,16 @@ class Endpointman_Advanced
 				break;
 
 			case "adminpass":
-				$dget['value'] = trim($dget['value']);
+				$dget['value'] = trim((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . $dget['value'] . "' WHERE var_name='adminpass'";
 				break;
 			case "userpass":
-				$dget['value'] = trim($dget['value']);
+				$dget['value'] = trim((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . $dget['value'] . "' WHERE var_name='userpass'";
 				break;
 				
 			case "ntp_server":
-				$dget['value'] = trim($dget['value']);
+				$dget['value'] = trim((string) $dget['value']);
 				$sql = "UPDATE endpointman_global_vars SET value='" . $dget['value'] . "' WHERE var_name='ntp'";
 				break;
 
@@ -400,7 +345,7 @@ class Endpointman_Advanced
 					$reallink = $this->LOCAL_PATH . "provisioning";
 					if ((!is_link($symlink)) OR (!readlink($symlink) == $reallink)) {
 						if (!symlink($reallink, $symlink)) {
-							$retarr = array("status" => false, "message" => _("Your permissions are wrong on " . $this->config->get('AMPWEBROOT') . ", web provisioning link not created!"));
+							$retarr = ["status" => false, "message" => _("Your permissions are wrong on " . $this->config->get('AMPWEBROOT') . ", web provisioning link not created!")];
 							//$dget['value'] = 'file';
 							break;
 						} //else {
@@ -416,12 +361,12 @@ class Endpointman_Advanced
 				break;
 
 			default:
-				$retarr = array("status" => false, "message" => _("Name invalid: ") . $dget['name'] );
+				$retarr = ["status" => false, "message" => _("Name invalid: ") . $dget['name']];
 		}
 
 		if (isset($sql)) {
 			sql($sql);
-			$retarr = array("status" => true, "message" => "OK", "name" => $dget['name'], "value" => $dget['value']);
+			$retarr = ["status" => true, "message" => "OK", "name" => $dget['name'], "value" => $dget['value']];
 			unset($sql);
 		}
 
@@ -438,27 +383,27 @@ class Endpointman_Advanced
 		$sql = 'SELECT * FROM endpointman_product_list WHERE hidden = 0 AND id IN (SELECT DISTINCT product_id FROM asterisk.endpointman_model_list where enabled = 1) AND brand IN (SELECT id FROM asterisk.endpointman_brand_list where hidden = 0) ORDER BY long_name ASC';
 		$product_list = sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
 		$i = 0;
-		$temp = array();
+		$temp = [];
 		foreach ($product_list as $srow)
 		{
 			$temp[$i]['id'] = $srow['id'];
 			$temp[$i]['name'] = $srow['long_name'];
-			$temp[$i]['name_mini'] = substr($srow['long_name'], 0, 40).(strlen($srow['long_name']) > 40 ? "..." : "");
+			$temp[$i]['name_mini'] = substr((string) $srow['long_name'], 0, 40).(strlen((string) $srow['long_name']) > 40 ? "..." : "");
 			$i++;
 		}
-		return array("status" => true, "message" => _("Ok!"), "ldatos" => $temp);
+		return ["status" => true, "message" => _("Ok!"), "ldatos" => $temp];
 	}
 
 	public function epm_advanced_poce_select()
 	{
 			if (! isset($_REQUEST['product_select'])) {
-			$retarr = array("status" => false, "message" => _("No send Product Select!"));
+			$retarr = ["status" => false, "message" => _("No send Product Select!")];
 		}
 		elseif (! is_numeric($_REQUEST['product_select'])) {
-			$retarr = array("status" => false, "message" => _("Product Select send is not number!"));
+			$retarr = ["status" => false, "message" => _("Product Select send is not number!")];
 		}
 		elseif ($_REQUEST['product_select'] < 0) {
-			$retarr = array("status" => false, "message" => _("Product Select send is number not valid!"));
+			$retarr = ["status" => false, "message" => _("Product Select send is number not valid!")];
 		}
 		else
 		{
@@ -469,7 +414,7 @@ class Endpointman_Advanced
 
 			$sql = "SELECT cfg_dir,directory,config_files FROM endpointman_product_list,endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id ='" . $dget['product_select'] . "'";
 			$row =  sql($sql, 'getRow', DB_FETCHMODE_ASSOC);
-			$config_files = explode(",", $row['config_files']);
+			$config_files = explode(",", (string) $row['config_files']);
 			$i = 0;
 			if (count($config_files)) {
 				foreach ($config_files as $config_files_data) {
@@ -528,13 +473,7 @@ class Endpointman_Advanced
 				$template_file_list[$i]['text'] = "template_data_" . $list['model'] . "_custom.xml";
 			}
 
-			$retarr = array("status" => true,
-							"message" => "OK",
-							"product_select" => $dget['product_select'],
-							"product_select_info" => $product_select_info,
-							"file_list" => $file_list,
-							"template_file_list" => $template_file_list,
-							"sql_file_list" => $sql_file_list);
+			$retarr = ["status" => true, "message" => "OK", "product_select" => $dget['product_select'], "product_select_info" => $product_select_info, "file_list" => $file_list, "template_file_list" => $template_file_list, "sql_file_list" => $sql_file_list];
 			unset($dget);
 		}
 		return $retarr;
@@ -542,17 +481,17 @@ class Endpointman_Advanced
 
 	public function epm_advanced_poce_select_file()
 	{
-		$arrVal['VAR_REQUEST'] = array("product_select", "file_id", "file_name", "type_file");
+		$arrVal['VAR_REQUEST'] = ["product_select", "file_id", "file_name", "type_file"];
 		foreach ($arrVal['VAR_REQUEST'] as $valor) {
 			if (! array_key_exists($valor, $_REQUEST)) {
-				return array("status" => false, "message" => _("No send value!")." [".$valor."]");
+				return ["status" => false, "message" => _("No send value!")." [".$valor."]"];
 			}
 		}
 		if (! is_numeric($_REQUEST['product_select'])) {
-			return array("status" => false, "message" => _("Product Select send is not number!"));
+			return ["status" => false, "message" => _("Product Select send is not number!")];
 		}
 		elseif ($_REQUEST['product_select'] < 0) {
-			return array("status" => false, "message" => _("Product Select send is number not valid!"));
+			return ["status" => false, "message" => _("Product Select send is number not valid!")];
 		}
 
 		$dget['product_select'] = $_REQUEST['product_select'];
@@ -578,7 +517,7 @@ class Endpointman_Advanced
 			$sql = "SELECT cfg_dir,directory,config_files FROM endpointman_product_list,endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id = '" . $dget['product_select'] . "'";
 			$row = sql($sql, 'getRow', DB_FETCHMODE_ASSOC);
 
-			$config_files = explode(",", $row['config_files']);
+			$config_files = explode(",", (string) $row['config_files']);
 			//TODO: Añadir validacion para ver si $dget['file_name'] esta en el array $config_files
 
 			$filename = $dget['file_name'];
@@ -606,7 +545,7 @@ class Endpointman_Advanced
 				$config_data = $contents;
 			}
 			else {
-				$retarr = array("status" => false, "message" => _("File not readable, check the permission! ").$filename);
+				$retarr = ["status" => false, "message" => _("File not readable, check the permission! ").$filename];
 			}
 		}
 		elseif ($dget['type_file'] == "tfile")
@@ -635,16 +574,7 @@ class Endpointman_Advanced
 			$location = $dget['file_name'];
 		}
 
-		$retarr = array("status" => true,
-						"message" => "OK",
-						"type" => $type,
-						"sendidt" => $sendidt,
-						"product_select" => $product_select,
-						"save_as_name_value" => $save_as_name_value,
-						"original_name" => $original_name,
-						"filename" => $filename,
-						"location" => $location,
-						"config_data" => $config_data);
+		$retarr = ["status" => true, "message" => "OK", "type" => $type, "sendidt" => $sendidt, "product_select" => $product_select, "save_as_name_value" => $save_as_name_value, "original_name" => $original_name, "filename" => $filename, "location" => $location, "config_data" => $config_data];
 
 		unset($dget);
 		return $retarr;
@@ -660,13 +590,13 @@ class Endpointman_Advanced
 	function epm_advanced_poce_sendid()
 	{
 		if (! isset($_REQUEST['product_select'])) {
-			$retarr = array("status" => false, "message" => _("No send Product Select!"));
+			$retarr = ["status" => false, "message" => _("No send Product Select!")];
 		}
 		elseif (! isset($_REQUEST['type_file'])) {
-			$retarr = array("status" => false, "message" => _("No send Type File!"));
+			$retarr = ["status" => false, "message" => _("No send Type File!")];
 		}
 		elseif (! isset($_REQUEST['sendid'])) {
-			$retarr = array("status" => false, "message" => _("No send SendID!"));
+			$retarr = ["status" => false, "message" => _("No send SendID!")];
 		}
 		else {
 			$dget['product_select'] = $_REQUEST['product_select'];
@@ -683,16 +613,16 @@ class Endpointman_Advanced
 				$sql = "SELECT cfg_dir,directory,config_files FROM endpointman_product_list,endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id = '" . $dget['product_select'] . "'";
 				$row = sql($sql, 'getrow', DB_FETCHMODE_ASSOC);
 				$this->submit_config($row['directory'], $row['cfg_dir'], $dget['original_name'], $dget['config_text']);
-				$retarr = array("status" => true, "message" => "Sent! Thanks :-)");
+				$retarr = ["status" => true, "message" => "Sent! Thanks :-)"];
 			}
 			elseif ($dget['type_file'] == "file") {
 				$sql = "SELECT cfg_dir,directory,config_files FROM endpointman_product_list,endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id = '" . $dget['product_select'] . "'";
 				$row = sql($sql, 'getRow', DB_FETCHMODE_ASSOC);
 				$error = $this->submit_config($row['directory'], $row['cfg_dir'], $dget['original_name'], $dget['config_text']);
-				$retarr = array("status" => true, "message" => "Sent! Thanks :-)");
+				$retarr = ["status" => true, "message" => "Sent! Thanks :-)"];
 			}
 			else {
-				$retarr = array("status" => false, "message" => "Type not valid!");
+				$retarr = ["status" => false, "message" => "Type not valid!"];
 			}
 			unset ($dget);
 		}
@@ -707,10 +637,10 @@ class Endpointman_Advanced
 
 	function epm_advanced_poce_save_file()
 	{
-		$arrVal['VAR_REQUEST'] = array("product_select", "sendid", "type_file", "config_text", "save_as_name", "file_name", "original_name");
+		$arrVal['VAR_REQUEST'] = ["product_select", "sendid", "type_file", "config_text", "save_as_name", "file_name", "original_name"];
 		foreach ($arrVal['VAR_REQUEST'] as $valor) {
 			if (! array_key_exists($valor, $_REQUEST)) {
-				return array("status" => false, "message" => _("No send value!")." [".$valor."]");
+				return ["status" => false, "message" => _("No send value!")." [".$valor."]"];
 			}
 		}
 
@@ -728,28 +658,28 @@ class Endpointman_Advanced
 			{
 				$sql = "SELECT cfg_dir,directory,config_files FROM endpointman_product_list,endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id = '" . $dget['product_select'] . "'";
 				$row = sql($sql, 'getRow', DB_FETCHMODE_ASSOC);
-				$config_files = explode(",", $row['config_files']);
+				$config_files = explode(",", (string) $row['config_files']);
 
 				if ((is_array($config_files)) AND (in_array($dget['file_name'], $config_files)))
 				{
 					$pathdir = $this->PHONE_MODULES_PATH . 'endpoint/' . $row['directory'] . "/" . $row['cfg_dir'] . "/";
 					$pathfile = $pathdir . $dget['file_name'];
 					if ((! file_exists($pathfile)) AND (! is_writable($pathdir))) {
-						$retarr = array("status" => false, "message" => "Directory is not Writable (".$pathdir.")!");
+						$retarr = ["status" => false, "message" => "Directory is not Writable (".$pathdir.")!"];
 					}
 					elseif (! is_writable($pathfile)) {
-						$retarr = array("status" => false, "message" => "File is not Writable (".$pathfile.")!");
+						$retarr = ["status" => false, "message" => "File is not Writable (".$pathfile.")!"];
 					}
 					else
 					{
 						$wfh = fopen($pathfile, 'w');
-						fwrite($wfh, $dget['config_text']);
+						fwrite($wfh, (string) $dget['config_text']);
 						fclose($wfh);
-						$retarr = array("status" => true, "message" => "Saved to Hard Drive!");
+						$retarr = ["status" => true, "message" => "Saved to Hard Drive!"];
 					}
 				}
 				else {
-					$retarr = array("status" => false, "message" => "The File no existe in the DataBase!");
+					$retarr = ["status" => false, "message" => "The File no existe in the DataBase!"];
 				}
 			}
 			elseif ($dget['command'] == "poce_save_as_file")
@@ -757,47 +687,47 @@ class Endpointman_Advanced
 				$db = $this->db;
 				$sql = 'INSERT INTO endpointman_custom_configs (name, original_name, product_id, data) VALUES (?,?,?,?)';
 				$q = $db->prepare($sql);
-				$ob = $q->execute(array(addslashes($dget['save_as_name']), addslashes($dget['original_name']), $dget['product_select'], addslashes($dget['config_text'])));
+				$ob = $q->execute([addslashes((string) $dget['save_as_name']), addslashes((string) $dget['original_name']), $dget['product_select'], addslashes((string) $dget['config_text'])]);
 				$newidinsert = $db->lastInsertId();
-				$retarr = array("status" => true, "message" => "Saved to Database!");
+				$retarr = ["status" => true, "message" => "Saved to Database!"];
 
 				$retarr['type_file'] = "sql";
 				$retarr['location'] = "SQL: ". $dget['save_as_name'];
 				$retarr['sendidt'] = $newidinsert;
 			}
 			else {
-				$retarr = array("status" => false, "message" => "Command not valid!");
+				$retarr = ["status" => false, "message" => "Command not valid!"];
 			}
 		}
 		elseif ($dget['type_file'] == "sql")
 		{
 			if ($dget['command'] == "poce_save_file")
 			{
-				$sql = "UPDATE endpointman_custom_configs SET data = '" . addslashes($dget['config_text']) . "' WHERE id = " . $dget['sendid'];
+				$sql = "UPDATE endpointman_custom_configs SET data = '" . addslashes((string) $dget['config_text']) . "' WHERE id = " . $dget['sendid'];
 				sql($sql);
-				$retarr = array("status" => true, "message" => "Saved to Database!");
+				$retarr = ["status" => true, "message" => "Saved to Database!"];
 			}
 			elseif ($dget['command'] == "poce_save_as_file")
 			{
 				$db = $this->db;
 				$sql = 'INSERT INTO endpointman_custom_configs (name, original_name, product_id, data) VALUES (?,?,?,?)';
 				$q = $db->prepare($sql);
-				$ob = $q->execute(array(addslashes($dget['save_as_name']), addslashes($dget['original_name']), $dget['product_select'], addslashes($dget['config_text'])));
+				$ob = $q->execute([addslashes((string) $dget['save_as_name']), addslashes((string) $dget['original_name']), $dget['product_select'], addslashes((string) $dget['config_text'])]);
 				$newidinsert = $db->lastInsertId();
-				$retarr = array("status" => true, "message" => "Saved to Database!");
+				$retarr = ["status" => true, "message" => "Saved to Database!"];
 
 				$retarr['type_file'] = "sql";
 				$retarr['location'] = "SQL: ". $dget['save_as_name'];
 				$retarr['sendidt'] = $newidinsert;
 			}
 			else {
-				$retarr = array("status" => false, "message" => "Command not valid!");
+				$retarr = ["status" => false, "message" => "Command not valid!"];
 			}
 		}
 		elseif ($dget['type_file'] == "tfile")
 		{
 			/*
-			
+
 			$db = $this->db;
 			$sql = 'INSERT INTO endpointman_custom_configs (name, original_name, product_id, data) VALUES (?,?,?,?)';
 			$q = $db->prepare($sql);
@@ -808,7 +738,7 @@ class Endpointman_Advanced
 			*/
 		}
 		else {
-			$retarr = array("status" => false, "message" => "Type not valid!");
+			$retarr = ["status" => false, "message" => "Type not valid!"];
 		}
 
 		$retarr['original_name'] = $dget['original_name'];
@@ -821,10 +751,10 @@ class Endpointman_Advanced
 	
 	function epm_advanced_poce_delete_config_custom()
 	{
-		$arrVal['VAR_REQUEST'] = array("product_select", "type_file", "sql_select");
+		$arrVal['VAR_REQUEST'] = ["product_select", "type_file", "sql_select"];
 		foreach ($arrVal['VAR_REQUEST'] as $valor) {
 			if (! array_key_exists($valor, $_REQUEST)) {
-				return array("status" => false, "message" => _("No send value!")." [".$valor."]");
+				return ["status" => false, "message" => _("No send value!")." [".$valor."]"];
 			}
 		}
 
@@ -836,9 +766,9 @@ class Endpointman_Advanced
 			$sql = "DELETE FROM endpointman_custom_configs WHERE id =" . $dget['sql_select'];
 			sql($sql);
 			unset ($sql);
-			$retarr = array("status" => true, "message" => "File delete ok!");
+			$retarr = ["status" => true, "message" => "File delete ok!"];
 		}
-		else { $retarr = array("status" => false, "message" => _("Type File not valid!")); }
+		else { $retarr = ["status" => false, "message" => _("Type File not valid!")]; }
 
 		unset($dget);
 		return $retarr;
@@ -849,11 +779,11 @@ class Endpointman_Advanced
 	public function epm_advanced_manual_upload_list_files_brans_export()
 	{
 		$path_tmp_dir = $this->PHONE_MODULES_PATH."temp/export/";
-		$array_list_files = array();
-		$array_count_brand = array();
+		$array_list_files = [];
+		$array_count_brand = [];
 
 
-		$array_list_exception= array(".", "..", ".htaccess");
+		$array_list_exception= [".", "..", ".htaccess"];
 		if(file_exists($path_tmp_dir))
 		{
 			if(is_dir($path_tmp_dir))
@@ -868,19 +798,7 @@ class Endpointman_Advanced
 					$ftime = substr(pathinfo($archivo, PATHINFO_FILENAME), -10);
 
 					$array_count_brand[] = $brand;
-					$array_list_files[$i] = array("brand" => $brand,
-							"pathall" => $pathandfile,
-							"path" => $path_tmp_dir,
-							"file" => $archivo,
-							"filename" => pathinfo($archivo, PATHINFO_FILENAME),
-							"extension" => pathinfo($archivo, PATHINFO_EXTENSION),
-							"timer" => $ftime,
-							"timestamp" => strftime("[%Y-%m-%d %H:%M:%S]", $ftime),
-							"mime_type" => mime_content_type($pathandfile),
-							"is_dir" => is_dir($pathandfile),
-							"is_file" => is_file($pathandfile),
-							"is_link" => is_link($pathandfile),
-							"readlink" => (is_link($pathandfile) == true ? readlink ($pathandfile) : NULL));
+					$array_list_files[$i] = ["brand" => $brand, "pathall" => $pathandfile, "path" => $path_tmp_dir, "file" => $archivo, "filename" => pathinfo($archivo, PATHINFO_FILENAME), "extension" => pathinfo($archivo, PATHINFO_EXTENSION), "timer" => $ftime, "timestamp" => strftime("[%Y-%m-%d %H:%M:%S]", $ftime), "mime_type" => mime_content_type($pathandfile), "is_dir" => is_dir($pathandfile), "is_file" => is_file($pathandfile), "is_link" => is_link($pathandfile), "readlink" => (is_link($pathandfile) == true ? readlink ($pathandfile) : NULL)];
 
 					$i++;
 				}
@@ -888,27 +806,27 @@ class Endpointman_Advanced
 
 				$array_count_brand = array_count_values($array_count_brand);
 				ksort ($array_count_brand);
-				$array_count_brand_end = array();
+				$array_count_brand_end = [];
 
 				foreach($array_count_brand as $key => $value) {
-					$array_count_brand_end[] = array('name' => $key , 'num' => $value);
+					$array_count_brand_end[] = ['name' => $key, 'num' => $value];
 				}
 
-				$retarr = array("status" => true, "message" => _("List Done!"), "countlist" => count($array_list_files), "list_files" => $array_list_files, "list_brands" => $array_count_brand_end );
+				$retarr = ["status" => true, "message" => _("List Done!"), "countlist" => count($array_list_files), "list_files" => $array_list_files, "list_brands" => $array_count_brand_end];
 				unset ($array_count_brand_end);
 				unset ($array_count_brand);
 				unset ($array_list_files);
 			}
 			else {
-				$retarr = array("status" => false, "message" => _("Not is directory: ") . $path_tmp_dir);
+				$retarr = ["status" => false, "message" => _("Not is directory: ") . $path_tmp_dir];
 			}
 		} else {
-			$retarr = array("status" => false, "message" => _("Directory no exists: ") . $path_tmp_dir);
+			$retarr = ["status" => false, "message" => _("Directory no exists: ") . $path_tmp_dir];
 		}
 		return $retarr;
 	}
 
-	public function epm_advanced_manual_upload_brand()
+	public function epm_advanced_manual_upload_brand(): void
 	{
 		if (count($_FILES["files"]["error"]) == 0) {
 			out(_("Error: Can Not Find Uploaded Files!"));
@@ -923,7 +841,7 @@ class Endpointman_Advanced
 				else {
 					$uploads_dir = $this->PHONE_MODULES_PATH . "temp";
 					$name = $_FILES["files"]["name"][$key];
-					$extension = pathinfo($name, PATHINFO_EXTENSION);
+					$extension = pathinfo((string) $name, PATHINFO_EXTENSION);
 					if ($extension == "tgz") {
 						$tmp_name = $_FILES["files"]["tmp_name"][$key];
 						$uploads_dir_file = $uploads_dir."/".$name;
@@ -952,7 +870,7 @@ class Endpointman_Advanced
 								exec("tar -xvf ".$uploads_dir_file." -C ".$temp_directory);
 								out(_("Done!"));
 
-								$package = basename($name, ".tgz");
+								$package = basename((string) $name, ".tgz");
 								$package = explode("-",$package);
 
 								if ($this->configmod->get('debug')) {
@@ -981,7 +899,7 @@ class Endpointman_Advanced
 		}
 	}
 
-	public function epm_advanced_manual_upload_provisioner ()
+	public function epm_advanced_manual_upload_provisioner (): void
 	{
 		if (count($_FILES["files"]["error"]) == 0) {
 			out(_("Error: Can Not Find Uploaded Files!"));
@@ -997,7 +915,7 @@ class Endpointman_Advanced
 				else {
 					$uploads_dir = $this->PHONE_MODULES_PATH . "temp/export";
 					$name = $_FILES["files"]["name"][$key];
-					$extension = pathinfo($name, PATHINFO_EXTENSION);
+					$extension = pathinfo((string) $name, PATHINFO_EXTENSION);
 					if ($extension == "tgz")
 					{
 						$tmp_name = $_FILES["files"]["tmp_name"][$key];
@@ -1042,7 +960,7 @@ class Endpointman_Advanced
 		}
 	}
 
-	public function epm_advanced_manual_upload_export_brans_available_file()
+	public function epm_advanced_manual_upload_export_brans_available_file(): void
 	{
 		if ((! isset($_REQUEST['file_package'])) OR ($_REQUEST['file_package'] == "")) {
 			header('HTTP/1.0 404 Not Found', true, 404);
@@ -1063,7 +981,7 @@ class Endpointman_Advanced
 			else {
 				header('Content-Description: File Transfer');
 				header('Content-Type: application/octet-stream');
-				header('Content-Disposition: attachment; filename="'.basename($dget['file_package']).'"');
+				header('Content-Disposition: attachment; filename="'.basename((string) $dget['file_package']).'"');
 				header('Expires: 0');
 				header('Cache-Control: must-revalidate');
 				header('Pragma: public');
@@ -1077,7 +995,7 @@ class Endpointman_Advanced
 		exit;
 	}
 
-	public function epm_advanced_manual_upload_export_brans_available()
+	public function epm_advanced_manual_upload_export_brans_available(): void
 	{
 		if ((! isset($_REQUEST['package'])) OR ($_REQUEST['package'] == "")) {
 			out(_("Error: No package set!"));
@@ -1117,7 +1035,7 @@ class Endpointman_Advanced
 
 
 	/**** FUNCIONES SEC MODULO "epm_advanced\iedl" ****/
-	public function epm_advanced_iedl_export($sFileName = "devices_list.csv")
+	public function epm_advanced_iedl_export($sFileName = "devices_list.csv"): void
 	{
 		header("Content-type: text/csv");
 		header('Content-Disposition: attachment; filename="'.$sFileName.'"');
@@ -1132,7 +1050,7 @@ class Endpointman_Advanced
 	}
 
 	//Dave B's Q&D file upload security code (http://us2.php.net/manual/en/features.file-upload.php)
-	public function epm_advanced_iedl_import()
+	public function epm_advanced_iedl_import(): void
 	{
 		if (count($_FILES["files"]["error"]) == 0) {
 			out(_("Error: Can Not Find Uploaded Files!"));
@@ -1140,7 +1058,7 @@ class Endpointman_Advanced
 		else
 		{
 			//$allowedExtensions = array("application/csv", "text/plain", "text/csv", "application/vnd.ms-excel");
-			$allowedExtensions = array("csv", "txt");
+			$allowedExtensions = ["csv", "txt"];
 			foreach ($_FILES["files"]["error"] as $key => $error) {
 				outn(sprintf(_("Importing CSV file %s ...<br />"), $_FILES["files"]["name"][$key]));
 
@@ -1150,14 +1068,14 @@ class Endpointman_Advanced
 				else
 				{
 					//if (!in_array($_FILES["files"]["type"][$key], $allowedExtensions)) {
-					if (!in_array(substr(strrchr($_FILES["files"]["name"][$key], "."), 1), $allowedExtensions)) {
+					if (!in_array(substr(strrchr((string) $_FILES["files"]["name"][$key], "."), 1), $allowedExtensions)) {
 						out(sprintf(_("Error: We support only CSV and TXT files, type file %s no support!"), $_FILES["files"]["name"][$key]));
 					}
 					elseif ($_FILES["files"]["size"][$key] == 0) {
 						out(sprintf(_("Error: File %s size is 0!"), $_FILES["files"]["name"][$key]));
 					}
 					else {
-						$uploadfile = $this->LOCAL_PATH . basename($_FILES["files"]["name"][$key]);
+						$uploadfile = $this->LOCAL_PATH . basename((string) $_FILES["files"]["name"][$key]);
 						$uploadtemp = $_FILES["files"]["tmp_name"][$key];
 
 						if (move_uploaded_file($uploadtemp, $uploadfile)) {
@@ -1177,7 +1095,7 @@ class Endpointman_Advanced
 											$sql_model = "SELECT id FROM endpointman_model_list WHERE brand = " . $brand_id . " AND model LIKE '%" . $device[2] . "%' LIMIT 1";
 											$sql_ext = "SELECT extension, name FROM users WHERE extension LIKE '%" . $device[3] . "%' LIMIT 1";
 
-											$line_id = isset($device[4]) ? $device[4] : 1;
+											$line_id = $device[4] ?? 1;
 
 											$res_model = sql($sql_model);
 											if (count($res_model)) {
@@ -1227,10 +1145,10 @@ FreePBX::Endpointman()->add_device($mac, $model_id, $ext, 0, $line_id, $descript
 	{
 		//TODO: Añadir validacion de si es custom o no
 		if ((! isset($_REQUEST['id_del'])) OR ($_REQUEST['id_del'] == "")) {
-			$retarr = array("status" => false, "message" => _("No ID set!"));
+			$retarr = ["status" => false, "message" => _("No ID set!")];
 		}
 		elseif ((! is_numeric($_REQUEST['id_del'])) OR ($_REQUEST['id_del'] < 0)) {
-			$retarr = array("status" => false, "message" => _("ID  not valid!"), "id" => $_REQUEST['id']);
+			$retarr = ["status" => false, "message" => _("ID  not valid!"), "id" => $_REQUEST['id']];
 		}
 		else
 		{
@@ -1239,7 +1157,7 @@ FreePBX::Endpointman()->add_device($mac, $model_id, $ext, 0, $line_id, $descript
 			$sql = "DELETE FROM endpointman_oui_list WHERE id = " . $dget['id'];
 			sql($sql);
 
-			$retarr = array("status" => true, "message" => "OK", "id" => $dget['id']);
+			$retarr = ["status" => true, "message" => "OK", "id" => $dget['id']];
 			unset($dget);
 		}
 		return $retarr;
@@ -1249,10 +1167,10 @@ FreePBX::Endpointman()->add_device($mac, $model_id, $ext, 0, $line_id, $descript
 	{
 		//TODO: Pendiente añadir isExiste datos.
 		if ((! isset($_REQUEST['number_new_oui'])) OR ($_REQUEST['number_new_oui'] == "")) {
-			$retarr = array("status" => false, "message" => _("No OUI set!"));
+			$retarr = ["status" => false, "message" => _("No OUI set!")];
 		}
 		elseif ((! isset($_REQUEST['brand_new_oui'])) OR ($_REQUEST['brand_new_oui'] == "")) {
-			$retarr = array("status" => false, "message" => _("No Brand set!"));
+			$retarr = ["status" => false, "message" => _("No Brand set!")];
 		}
 		else {
 			$dget['oui'] = $_REQUEST['number_new_oui'];
@@ -1261,7 +1179,7 @@ FreePBX::Endpointman()->add_device($mac, $model_id, $ext, 0, $line_id, $descript
 			$sql = "INSERT INTO  endpointman_oui_list (oui, brand, custom) VALUES ('" . $dget['oui'] . "',  '" . $dget['brand'] . "',  '1')";
 			sql($sql);
 
-			$retarr = array("status" => true, "message" => "OK", "oui" => $dget['oui'], "brand" => $dget['brand']);
+			$retarr = ["status" => true, "message" => "OK", "oui" => $dget['oui'], "brand" => $dget['brand']];
 			unset($dget);
 		}
 		return $retarr;
@@ -1304,24 +1222,16 @@ FreePBX::Endpointman()->add_device($mac, $model_id, $ext, 0, $line_id, $descript
      * @return string
      */
     function file_upload_error_message($error_code) {
-    	switch ($error_code) {
-    		case UPLOAD_ERR_INI_SIZE:
-    			return _('The uploaded file exceeds the upload_max_filesize directive in php.ini');
-    		case UPLOAD_ERR_FORM_SIZE:
-    			return _('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form');
-    		case UPLOAD_ERR_PARTIAL:
-    			return _('The uploaded file was only partially uploaded');
-    		case UPLOAD_ERR_NO_FILE:
-    			return _('No file was uploaded');
-    		case UPLOAD_ERR_NO_TMP_DIR:
-    			return _('Missing a temporary folder');
-    		case UPLOAD_ERR_CANT_WRITE:
-    			return _('Failed to write file to disk');
-    		case UPLOAD_ERR_EXTENSION:
-    			return _('File upload stopped by extension');
-    		default:
-    			return _('Unknown upload error');
-    	}
+    	return match ($error_code) {
+         UPLOAD_ERR_INI_SIZE => _('The uploaded file exceeds the upload_max_filesize directive in php.ini'),
+         UPLOAD_ERR_FORM_SIZE => _('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'),
+         UPLOAD_ERR_PARTIAL => _('The uploaded file was only partially uploaded'),
+         UPLOAD_ERR_NO_FILE => _('No file was uploaded'),
+         UPLOAD_ERR_NO_TMP_DIR => _('Missing a temporary folder'),
+         UPLOAD_ERR_CANT_WRITE => _('Failed to write file to disk'),
+         UPLOAD_ERR_EXTENSION => _('File upload stopped by extension'),
+         default => _('Unknown upload error'),
+     };
     }
 
 	/**

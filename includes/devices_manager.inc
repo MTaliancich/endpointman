@@ -235,7 +235,7 @@ switch ($sub_type) {
                     $provisioner_lib->brand_name = $phone_info['directory'];
                     $provisioner_lib->family_line = $phone_info['cfg_dir'];
 
-                    $provisioner_lib->settings['line'][0] = array('username' => $phone_info['line'][1]['ext'], 'authname' => $phone_info['line'][1]['ext'], 'tech' => $phone_info['line'][1]['tech']);
+                    $provisioner_lib->settings['line'][0] = ['username' => $phone_info['line'][1]['ext'], 'authname' => $phone_info['line'][1]['ext'], 'tech' => $phone_info['line'][1]['tech']];
                     $provisioner_lib->reboot();
                     unset($provisioner_lib);
                 }
@@ -392,12 +392,12 @@ switch ($sub_type) {
 $devices_list = $endpoint->eda->all_devices();;
 
 $i = 0;
-$list = array();
+$list = [];
 
 $device_statuses = shell_exec($endpoint->global_cfg['asterisk_location']." -rx 'sip show peers'");
 
 $device_statuses = explode("\n", $device_statuses);
-$devices_status = array();
+$devices_status = [];
 foreach($device_statuses as $key => $data) {
     preg_match('/(\d*)\/[\d]*/i', $data, $extout);
     preg_match('/\b(?:\d{1,3}\.){3}\d{1,3}\b/i', $data, $ipaddress);
@@ -455,8 +455,8 @@ foreach($devices_list as $devices_row) {
     }
     $ext = $list[$i]['line'][0]['ext'];
 
-    $list[$i]['status']['status'] = isset($devices_status[$ext]['status']) ?$devices_status[$ext]['status'] : FALSE;
-    $list[$i]['status']['ip'] = isset($devices_status[$ext]['ip']) ? $devices_status[$ext]['ip'] : FALSE;
+    $list[$i]['status']['status'] = $devices_status[$ext]['status'] ?? FALSE;
+    $list[$i]['status']['ip'] = $devices_status[$ext]['ip'] ?? FALSE;
     $list[$i]['status']['port'] = '';
     $i++;
 }
@@ -482,7 +482,7 @@ $sql = "SELECT DISTINCT endpointman_product_list.* FROM endpointman_product_list
 
 $template_list = $endpoint->eda->sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
 $i = 1;
-$product_list = array();
+$product_list = [];
 $product_list[0]['value'] = 0;
 $product_list[0]['text'] = "";
 foreach($template_list as $row) {
@@ -494,7 +494,7 @@ foreach($template_list as $row) {
 $sql = "SELECT DISTINCT endpointman_model_list.* FROM endpointman_product_list, endpointman_model_list WHERE endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_model_list.hidden = 0 AND endpointman_model_list.enabled = 1 AND endpointman_product_list.hidden != 1 AND endpointman_product_list.cfg_dir !=  ''";
 $template_list = $endpoint->eda->sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
 $i = 1;
-$model_list = array();
+$model_list = [];
 $model_list[0]['value'] = 0;
 $model_list[0]['text'] = "";
 foreach($template_list as $row) {
@@ -504,9 +504,7 @@ foreach($template_list as $row) {
 }
 
 //initialize a Rain TPL object
-if (isset($template_editor)) {
-
-} else {
+if (!isset($template_editor)) {
     $endpoint->tpl->assign("list", $list);
     $endpoint->tpl->assign("error", "");
     $serv_address = !empty($endpoint->global_cfg['nmap_search']) ? $endpoint->global_cfg['nmap_search'] : $_SERVER["SERVER_ADDR"].'/24';
@@ -527,25 +525,20 @@ if (isset($template_editor)) {
     $endpoint->tpl->assign("amp_conf_serial", base64_encode(serialize($amp_send)));
     $endpoint->tpl->assign("no_add", $no_add);
     $endpoint->tpl->assign("mode", $mode);
-
-	
-    $edit_row['id'] = isset($edit_row['id']) ? $edit_row['id'] : '0';
+    $edit_row['id'] ??= '0';
     $endpoint->tpl->assign("edit_id", $edit_row['id']);
-	$endpoint->tpl->assign("template_id", $edit_row['template_id']);
-	
-	if ($edit_row['template_id'] == "0"){
-	$endpoint->tpl->assign("custom", 1);
-	
-	$endpoint->tpl->assign("template_id", $edit_row['id']);
-	}
-	else{
-	$endpoint->tpl->assign("custom", 0);
-	}
-
+    $endpoint->tpl->assign("template_id", $edit_row['template_id']);
+    if ($edit_row['template_id'] == "0"){
+   	$endpoint->tpl->assign("custom", 1);
+   	
+   	$endpoint->tpl->assign("template_id", $edit_row['id']);
+   	}
+   	else{
+   	$endpoint->tpl->assign("custom", 0);
+   	}
     if(isset($final)) {
         $_SESSION['dev_cache'] = base64_encode(serialize($final));
     }
-
     if (isset($mode) && ($mode == "EDIT")) {
         $ma = $endpoint->models_available($edit_row['model_id'],$edit_row['brand_id']);
         if($ma != FALSE) {
@@ -572,10 +565,8 @@ if (isset($template_editor)) {
             $endpoint->tpl->assign("mode", NULL);
         }
     }
-
     //Prepare Message Box
     $endpoint->prepare_message_box();
-
     //draw the template
     echo $endpoint->tpl->draw( 'devices_manager' );
 }

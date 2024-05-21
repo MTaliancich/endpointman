@@ -70,7 +70,7 @@ class RainTPL{
 	 * @access private
 	 * @var array
 	 */
-	var $variables = array( );
+	public $variables = [];
 	
 
 	/**
@@ -91,9 +91,9 @@ class RainTPL{
 	 * @return RainTPL
 	 */
 
-	function RainTPL( $tpl_dir = null, $tpl_compile_dir = null, $base_dir = null ){
+	function RainTPL( $tpl_dir = null, $tpl_compile_dir = null, $base_dir = null ): void{
 		if( $tpl_dir )
-			RainTPL::$tpl_dir = $tpl_dir . ( substr($tpl_dir,-1,1) != "/" ? "/" : "" );
+			RainTPL::$tpl_dir = $tpl_dir . ( !str_ends_with($tpl_dir, "/") ? "/" : "" );
 		if( $tpl_compile_dir )
 			RainTPL::$tpl_compile_dir = $tpl_compile_dir;
 		if( $base_dir )
@@ -101,13 +101,9 @@ class RainTPL{
 	}
 		
 	/**
-	 * Assign variable and name, or you can assign associative arrays variable to the template.
-	 *
-	 * @param mixed $variable_name Name of template variable
-	 * @param mixed $value value assigned to this variable
-	 */
-	
-	function assign( $variable, $value = null ){
+  * Assign variable and name, or you can assign associative arrays variable to the template.
+  */
+ function assign( $variable, mixed $value = null ): void{
 
 		if( is_array( $variable ) )
 			foreach( $variable as $name => $value )

@@ -8,10 +8,8 @@
 namespace FreePBX\modules;
  
 class epm_data_abstraction {
-    function __construct($config, $configmod) {
-    	
-    	$this->config = $config;
-    	$this->configmod = $configmod;
+    function __construct(public $config, public $configmod)
+    {
     }
 	
     function all_products() {

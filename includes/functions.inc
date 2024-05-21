@@ -43,8 +43,8 @@ class endpointmanager {
         //date_default_timezone_set($this->global_cfg['tz']);
 
         //Generate empty array
-        $this->error = array();
-        $this->message = array();
+        $this->error = [];
+        $this->message = [];
 
         //Move all information from the global $amp_conf into our public space. This will help prevent security concerns
         if (isset($amp_conf) AND is_array($amp_conf)) {
@@ -58,7 +58,7 @@ class endpointmanager {
 					define("UPDATE_PATH", $this->global_cfg['update_server']);
 				}
 				if(!defined("MODULES_PATH")) {
-					define("MODULES_PATH", dirname(dirname(dirname(__FILE__))) . '/');
+					define("MODULES_PATH", dirname(__FILE__, 3) . '/');
 				}
 
 
@@ -126,7 +126,7 @@ class endpointmanager {
         }
     }
 
-    function tftp_check() {
+    function tftp_check(): void {
         //create a simple block here incase people have strange issues going on as we will kill http
         //by running this if the server isn't really running!
         $sql = 'SELECT value FROM endpointman_global_vars WHERE var_name = \'tftp_check\'';
@@ -135,7 +135,7 @@ class endpointmanager {
             $this->eda->sql($sql);
             $subject = shell_exec("netstat -luan --numeric-ports");
             if (preg_match('/:69\s/i', $subject)) {
-                $rand = md5(rand(10, 2000));
+                $rand = md5(random_int(10, 2000));
                 if (file_put_contents($this->global_cfg['config_location'] . 'TEST', $rand)) {
                     if ($this->system->tftp_fetch('127.0.0.1', 'TEST') != $rand) {
                         $this->error['tftp_check'] = 'Local TFTP Server is not correctly configured';
@@ -192,11 +192,11 @@ class endpointmanager {
         $posturl = 'http://www.provisioner.net/submit_config.php';
 
         $fp = fopen(LOCAL_PATH . 'data.txt', 'w');
-        fwrite($fp, $data);
+        fwrite($fp, (string) $data);
         fclose($fp);
         $file_name_with_full_path = LOCAL_PATH . "data.txt";
 
-        $postvars = array('brand' => $brand, 'product' => $product, 'origname' => htmlentities(addslashes($orig_name)), 'file_contents' => '@' . $file_name_with_full_path);
+        $postvars = ['brand' => $brand, 'product' => $product, 'origname' => htmlentities(addslashes((string) $orig_name)), 'file_contents' => '@' . $file_name_with_full_path];
 
         $ch = curl_init($posturl);
         curl_setopt($ch, CURLOPT_POST, 1);
@@ -215,7 +215,7 @@ class endpointmanager {
         return($Final_Out);
     }
 
-    function prepare_message_box() {
+    function prepare_message_box(): void {
         $error_message = NULL;
         foreach ($this->error as $key => $error) {
             $error_message .= $error;
@@ -258,7 +258,7 @@ class endpointmanager {
      * @param string $tpl Not used at this time
      * @param int $fatal_error Either 0 or 1, 1 would be red, 0 would be black
      */
-    function display_message_box($message, $fatal_error=0) {
+    function display_message_box($message, $fatal_error=0): void {
         $this->tpl->assign("show_error_box", 1);
         $this->tpl->assign("advanced_debug", $this->global_cfg['debug']);
         $this->tpl->assign("fatal_error", $fatal_error);
@@ -271,24 +271,16 @@ class endpointmanager {
      * @return string
      */
     function file_upload_error_message($error_code) {
-        switch ($error_code) {
-            case UPLOAD_ERR_INI_SIZE:
-                return 'The uploaded file exceeds the upload_max_filesize directive in php.ini';
-            case UPLOAD_ERR_FORM_SIZE:
-                return 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form';
-            case UPLOAD_ERR_PARTIAL:
-                return 'The uploaded file was only partially uploaded';
-            case UPLOAD_ERR_NO_FILE:
-                return 'No file was uploaded';
-            case UPLOAD_ERR_NO_TMP_DIR:
-                return 'Missing a temporary folder';
-            case UPLOAD_ERR_CANT_WRITE:
-                return 'Failed to write file to disk';
-            case UPLOAD_ERR_EXTENSION:
-                return 'File upload stopped by extension';
-            default:
-                return 'Unknown upload error';
-        }
+        return match ($error_code) {
+            UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
+            UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
+            UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded',
+            UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+            UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',
+            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+            UPLOAD_ERR_EXTENSION => 'File upload stopped by extension',
+            default => 'Unknown upload error',
+        };
     }
 
     /**
@@ -303,7 +295,7 @@ class endpointmanager {
         }
 
         //Get the OUI only
-        $oui = substr($this->mac_check_clean($mac), 0, 6);
+        $oui = substr((string) $this->mac_check_clean($mac), 0, 6);
         //Find the matching brand model to the oui
         $oui_sql = "SELECT endpointman_brand_list.name, endpointman_brand_list.id FROM endpointman_oui_list, endpointman_brand_list WHERE oui LIKE '%" . $oui . "%' AND endpointman_brand_list.id = endpointman_oui_list.brand AND endpointman_brand_list.installed = 1 LIMIT 1";
         $brand = $this->eda->sql($oui_sql, 'getRow', DB_FETCHMODE_ASSOC);
@@ -385,7 +377,7 @@ class endpointmanager {
                             $line = 1;
                         }
 
-                        $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ipei`, `ext`, `line`, `description`) VALUES ('" . $ext_id . "', '" . $ipei . "', '" . $ext . "', '" . $line . "', '" . addslashes($name) . "')";
+                        $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ipei`, `ext`, `line`, `description`) VALUES ('" . $ext_id . "', '" . $ipei . "', '" . $ext . "', '" . $line . "', '" . addslashes((string) $name) . "')";
                         $this->eda->sql($sql);
 
                         $this->message['add_device'][] = "Added " . $name . " to line " . $line;
@@ -423,7 +415,7 @@ class endpointmanager {
                     $sql = "SELECT description FROM devices WHERE id = " . $reg[0]['value'];
                     $name = $this->eda->sql($sql, 'getOne');
 
-                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('" . $mac_id . "', '" . $reg[0]['value'] . "', '" . $lines[0]['value'] . "', '" . addslashes($name) . "')";
+                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('" . $mac_id . "', '" . $reg[0]['value'] . "', '" . $lines[0]['value'] . "', '" . addslashes((string) $name) . "')";
                     $this->eda->sql($sql);
 
                     $this->message['add_line'] = "Added '<i>" . $name . "</i>' to line '<i>" . $lines[0]['value'] . "</i>' on device '<i>" . $reg[0]['value'] . "</i>' <br/> Configuration Files will not be Generated until you click Save!";
@@ -441,7 +433,7 @@ class endpointmanager {
                 if ($this->eda->all_unused_registrations()) {
                     $lines = array_values($this->linesAvailable(NULL, $mac_id));
 
-                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('" . $mac_id . "', '" . $ext . "', '" . $lines[0]['value'] . "', '" . addslashes($displayname) . "')";
+                    $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('" . $mac_id . "', '" . $ext . "', '" . $lines[0]['value'] . "', '" . addslashes((string) $displayname) . "')";
                     $this->eda->sql($sql);
 
                     $this->message['add_line'] = "Added '<i>" . $name . "</i>' to line '<i>" . $lines[0]['value'] . "</i>' on device '<i>" . $reg[0]['value'] . "</i>' <br/> Configuration Files will not be Generated until you click Save!";
@@ -468,7 +460,7 @@ class endpointmanager {
                     $name = $displayname;
                 }
 
-                $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('" . $mac_id . "', '" . $ext . "', '" . $line . "', '" . addslashes($name) . "')";
+                $sql = "INSERT INTO `endpointman_line_list` (`mac_id`, `ext`, `line`, `description`) VALUES ('" . $mac_id . "', '" . $ext . "', '" . $line . "', '" . addslashes((string) $name) . "')";
                 $this->eda->sql($sql);
                 $this->message['add_line'] .= "Added " . $name . " to line " . $line . "<br/>";
                 return($mac_id);
@@ -655,7 +647,7 @@ class endpointmanager {
 	 	//SIP EXTENSION SETTINGS get all Extensions and Settings
 	public function getSipextensions(){
 		
-		$ret = array();
+		$ret = [];
 		
 		$sql = "SELECT * FROM sip";
 		$res = $this->eda->sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
@@ -670,12 +662,7 @@ class endpointmanager {
 		foreach ($res as $row) {
 			$id=$row['id'];
 			$keyword=$row['keyword'];
-			$ret[$id . '-' . $keyword] = array(
-			'keyword' => $row['keyword'],
-			'data' => $row['data'],
-			'flags' => $row['flags']
-			
-			);
+			$ret[$id . '-' . $keyword] = ['keyword' => $row['keyword'], 'data' => $row['data'], 'flags' => $row['flags']];
 
                 } 
 	}
@@ -688,7 +675,7 @@ class endpointmanager {
 	 //SIP  SETTINGS get all SIP Settings Part 1
 	public function getSipSettings1(){
 
-		$ret = array();
+		$ret = [];
 		
 		$sql = "SELECT * FROM sipsettings";
 		$res = $this->eda->sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
@@ -702,11 +689,7 @@ class endpointmanager {
 
 		foreach ($res as $row) {
 			$keyword=$row['keyword'];
-			$ret[$keyword] = array(
-			'data' => $row['data'],
-			'seq' => $row['seq']
-			
-			);
+			$ret[$keyword] = ['data' => $row['data'], 'seq' => $row['seq']];
 		
 	
 	}	
@@ -732,7 +715,7 @@ class endpointmanager {
 	 //SIP  SETTINGS 2 get all SIP Settings Part 2
 	public function getSipSettings2(){
 		
-		$ret = array();
+		$ret = [];
 		
 		$sql = "SELECT * FROM kvstore_Sipsettings";
 		$res = $this->eda->sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
@@ -744,11 +727,7 @@ class endpointmanager {
 
 		foreach ($res as $row) {
 			$key=$row['key'];
-			$ret[$key] = array(
-			'val' => $row['val'],
-			'type' => $row['type']
-			
-			);
+			$ret[$key] = ['val' => $row['val'], 'type' => $row['type']];
 		
 	
 	}	
@@ -764,7 +743,7 @@ class endpointmanager {
 	//GET ALL FEATURE CODES
 	public function getFeatureCodes(){
 		
-		$ret = array();
+		$ret = [];
 		
 		$sql = "SELECT * FROM featurecodes";
 		$res = $this->eda->sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
@@ -781,17 +760,7 @@ class endpointmanager {
 
 		foreach ($featurecodes as $row) {
 			$featurename=$row['featurename'];
-			$ret[$featurename] = array(
-			'modulename' => $row['modulename'],
-			'featurename' => $row['featurename'],
-			'description' => $row['description'],
-			'helptext' => $row['helptext'],
-			'defaultcode' => $row['defaultcode'],
-			'customcode' => $row['customcode'],
-			'enabled' => $row['enabled'],
-			'providedest' => $row['providedest']
-				
-			);
+			$ret[$featurename] = ['modulename' => $row['modulename'], 'featurename' => $row['featurename'], 'description' => $row['description'], 'helptext' => $row['helptext'], 'defaultcode' => $row['defaultcode'], 'customcode' => $row['customcode'], 'enabled' => $row['enabled'], 'providedest' => $row['providedest']];
 
 		}	
 
@@ -811,7 +780,7 @@ class endpointmanager {
 	//SYSADMIN IS A COMERCIAL MODULE - CHECK IF IT IS INSTALLED, ELSE THIS FEATURE WILL BE SKIPPED.
 	global $active_modules;
 	if (!empty($active_modules['sysadmin']['rawname'])) {	
-		$ret = array();
+		$ret = [];
 		
 		$sql = "SELECT * FROM sysadmin_options";
 		$res = $this->eda->sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
@@ -825,9 +794,7 @@ class endpointmanager {
 
 		foreach ($res as $row) {
 			$key=$row['key'];
-			$ret[$key] = array(
-			'value' => $row['value']
-		);	
+			$ret[$key] = ['value' => $row['value']];	
 	}	
 }
 		
@@ -889,19 +856,19 @@ class endpointmanager {
             $sql = "SELECT endpointman_line_list.*, sip.data as secret, devices.*, endpointman_line_list.description AS epm_description FROM endpointman_line_list, sip, devices WHERE endpointman_line_list.ext = devices.id AND endpointman_line_list.ext = sip.id AND sip.keyword = 'secret' AND mac_id = " . $mac_id . " ORDER BY endpointman_line_list.line ASC";
             $lines_info = $this->eda->sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
             foreach ($lines_info as $line) {
-			
-			
-			
-			
 
 
-			
-			
-			
-			
-			
-			
-			
+
+
+
+
+
+
+
+
+
+
+
                 $phone_info['line'][$line['line']] = $line;
                 $phone_info['line'][$line['line']]['description'] = $line['epm_description'];
 				$phone_info['line'][$line['line']]['extension'] = $line['ext'];
@@ -915,8 +882,8 @@ class endpointmanager {
 				$phone_info['line'][$line['line']]['callerid']=$sipextensions[$phone_info['line'][$line['line']]['extension'] . '-' . 'callerid']['data'];
 				$phone_info['line'][$line['line']]['encryption']=$sipextensions[$phone_info['line'][$line['line']]['extension'] . '-' . 'encryption']['data'];
 				$phone_info['line'][$line['line']]['timestamp']=time();
-				
-				
+
+
 //Calculate the right SIP PORT (SIP/PJSIP/TLS/TCP)
 	//TLS
 	if ($phone_info['line'][$line['line']]['sipdriver'] == "chan_pjsip" and $phone_info['line'][$line['line']]['transport'] == '0.0.0.0-tls') {
@@ -997,10 +964,10 @@ class endpointmanager {
 	$phone_info['line'][$line['line']]['server_port'] = $SipSettings1['bindport']['data'];
 	$phone_info['line'][$line['line']]['proto'] = 'udp';
 	}				
-				
-				
-				
-                
+
+
+
+
             }
 			//print_r ($phone_info);
         } else {
@@ -1040,7 +1007,7 @@ class endpointmanager {
      * @param integer $id
      * @param integer $custom
      */
-    function edit_template_display($id, $custom) {
+    function edit_template_display($id, $custom): void {
         //endpointman_flush_buffers();
 
 
@@ -1098,13 +1065,13 @@ class endpointmanager {
         } else {
             $config_files_saved = unserialize($row['config_files_override']);
         }
-        $config_files_list = explode(",", $row['config_files']);
+        $config_files_list = explode(",", (string) $row['config_files']);
         $i = 0;
         $alt = 0;
 
         $i = 0;
         $b = 0;
-        $only_configs = array();
+        $only_configs = [];
         foreach ($config_files_list as $files) {
             $sql = "SELECT * FROM  endpointman_custom_configs WHERE product_id = '" . $row['product_id'] . "' AND original_name = '" . $files . "'";
             $alt_configs_list_count = $this->eda->sql($sql);
@@ -1176,17 +1143,17 @@ class endpointmanager {
                 }
                 $custom_cfg_data = $custom_cfg_data['data'];
             } else {
-                $extra_data = array();
+                $extra_data = [];
             }
         } else {
-            $custom_cfg_data = array();
-            $extra_data = array();
+            $custom_cfg_data = [];
+            $extra_data = [];
         }
         if (isset($user_cfg_data)) {
             $user_cfg_data = unserialize($user_cfg_data);
         }
 
-        $template_variables_array = array();
+        $template_variables_array = [];
         $group_count = 0;
         $variables_count = 0;
 
@@ -1200,7 +1167,7 @@ class endpointmanager {
             }
             foreach ($cats as $subcat_name => $subcats) {
                 foreach ($subcats as $item_var => $config_options) {
-                    if (preg_match('/(.*)\|(.*)/i', $item_var, $matches)) {
+                    if (preg_match('/(.*)\|(.*)/i', (string) $item_var, $matches)) {
                         $type = $matches[1];
                         $variable = $matches[2];
                     } else {
@@ -1212,7 +1179,7 @@ class endpointmanager {
                             case "lineloop":
                                 //line|1|display_name
                                 foreach ($config_options as $var_name => $var_items) {
-                                    $lcount = isset($var_items['line_count']) ? $var_items['line_count'] : $lcount;
+                                    $lcount = $var_items['line_count'] ?? $lcount;
                                     $key = "line|" . $lcount . "|" . $var_name;
                                     $items[$variables_count] = $items;
                                     $template_variables_array[$group_count]['data'][$variables_count] = $this->generate_form_data($variables_count, $var_items, $key, $custom_cfg_data, $admin, $user_cfg_data, $extra_data, $template_type);
@@ -1295,7 +1262,6 @@ class endpointmanager {
                             }
                             break;
                     }
-                    continue;
                 }
             }
         }
@@ -1322,14 +1288,14 @@ class endpointmanager {
                     $template_variables_array['max_chars'] = $cfg_data['max_chars'];
                 }
                 $template_variables_array['key'] = $key;
-                $template_variables_array['value'] = isset($custom_cfg_data[$key]) ? $custom_cfg_data[$key] : $cfg_data['default_value'];
+                $template_variables_array['value'] = $custom_cfg_data[$key] ?? $cfg_data['default_value'];
                 $template_variables_array['description'] = $cfg_data['description'];
                 break;
             case "radio":
                 if ((!$admin) && (isset($user_cfg_data[$key]))) {
                     $custom_cfg_data[$key] = $user_cfg_data[$key];
                 }
-                $num = isset($custom_cfg_data[$key]) ? $custom_cfg_data[$key] : $cfg_data['default_value'];
+                $num = $custom_cfg_data[$key] ?? $cfg_data['default_value'];
                 $template_variables_array['type'] = "radio";
                 $template_variables_array['key'] = $key;
                 $template_variables_array['description'] = $cfg_data['description'];
@@ -1352,7 +1318,7 @@ class endpointmanager {
                 if ((!$admin) && (isset($user_cfg_data[$key]))) {
                     $custom_cfg_data[$key] = $user_cfg_data[$key];
                 }
-                $num = isset($custom_cfg_data[$key]) ? $custom_cfg_data[$key] : $cfg_data['default_value'];
+                $num = $custom_cfg_data[$key] ?? $cfg_data['default_value'];
                 $template_variables_array['type'] = "list";
                 $template_variables_array['key'] = $key;
                 $template_variables_array['description'] = $cfg_data['description'];
@@ -1378,7 +1344,7 @@ class endpointmanager {
                 if ((!$admin) && (isset($user_cfg_data[$key]))) {
                     $custom_cfg_data[$key] = $user_cfg_data[$key];
                 }
-                $num = isset($custom_cfg_data[$key]) ? $custom_cfg_data[$key] : $cfg_data['default_value'];
+                $num = $custom_cfg_data[$key] ?? $cfg_data['default_value'];
                 $template_variables_array['type'] = "checkbox";
                 $template_variables_array['key'] = $key;
                 $template_variables_array['description'] = $cfg_data['description'];
@@ -1405,7 +1371,7 @@ class endpointmanager {
                     $template_variables_array['cols'] = $cfg_data['cols'];
                 }
                 $template_variables_array['key'] = $key;
-                $template_variables_array['value'] = isset($custom_cfg_data[$key]) ? $custom_cfg_data[$key] : $cfg_data['default_value'];
+                $template_variables_array['value'] = $custom_cfg_data[$key] ?? $cfg_data['default_value'];
                 $template_variables_array['description'] = $cfg_data['description'];
                 break;
             case "break":
@@ -1421,7 +1387,7 @@ class endpointmanager {
         }
 
         if (isset($cfg_data['tooltip'])) {
-            $template_variables_array['tooltip'] = htmlentities($cfg_data['tooltip']);
+            $template_variables_array['tooltip'] = htmlentities((string) $cfg_data['tooltip']);
         }
 
         if (($this->global_cfg['enable_ari']) AND ($admin) AND ($cfg_data['type'] != "break") AND ($cfg_data['type'] != "group") AND ($template_type == 'GENERAL')) {
@@ -1468,12 +1434,12 @@ class endpointmanager {
         $cfg_data = unserialize($row['template_data']);
         $count = count($cfg_data);
 
-        $custom_cfg_data_ari = array();
+        $custom_cfg_data_ari = [];
 
         foreach ($cfg_data['data'] as $cats) {
             foreach ($cats as $items) {
                 foreach ($items as $key_name => $config_options) {
-                    if (preg_match('/(.*)\|(.*)/i', $key_name, $matches)) {
+                    if (preg_match('/(.*)\|(.*)/i', (string) $key_name, $matches)) {
                         $type = $matches[1];
                         $key = $matches[2];
                     } else {
@@ -1484,7 +1450,7 @@ class endpointmanager {
                             $stuffing = explode("_", $key);
                             $key2 = $stuffing[0];
                             foreach ($config_options as $item_key => $item_data) {
-                                $lc = isset($item_data['loop_count']) ? $item_data['loop_count'] : '';
+                                $lc = $item_data['loop_count'] ?? '';
                                 $key = 'loop|' . $key2 . '_' . $item_key . '_' . $lc;
                                 if ((isset($item_data['loop_count'])) AND (isset($_REQUEST[$key]))) {
                                     $custom_cfg_data[$key] = $_REQUEST[$key];
@@ -1499,7 +1465,7 @@ class endpointmanager {
                             break;
                         case "lineloop":
                             foreach ($config_options as $item_key => $item_data) {
-                                $lc = isset($item_data['line_count']) ? $item_data['line_count'] : '';
+                                $lc = $item_data['line_count'] ?? '';
                                 $key = 'line|' . $lc . '|' . $item_key;
                                 if ((isset($item_data['line_count'])) AND (isset($_REQUEST[$key]))) {
                                     $custom_cfg_data[$key] = $_REQUEST[$key];
@@ -1530,13 +1496,13 @@ class endpointmanager {
             }
         }
 
-        $config_files = explode(",", $row['config_files']);
+        $config_files = explode(",", (string) $row['config_files']);
 
         $i = 0;
         while ($i < count($config_files)) {
             $config_files[$i] = str_replace(".", "_", $config_files[$i]);
             if (isset($_REQUEST[$config_files[$i]])) {
-                $_REQUEST[$config_files[$i]] = explode("_", $_REQUEST[$config_files[$i]], 2);
+                $_REQUEST[$config_files[$i]] = explode("_", (string) $_REQUEST[$config_files[$i]], 2);
                 $_REQUEST[$config_files[$i]] = $_REQUEST[$config_files[$i]][0];
                 if ($_REQUEST[$config_files[$i]] > 0) {
                     $config_files_selected[$config_files[$i]] = $_REQUEST[$config_files[$i]];
@@ -1565,7 +1531,7 @@ class endpointmanager {
 
         $this->eda->sql($sql);
 
-        $phone_info = array();
+        $phone_info = [];
 
         if ($custom != 0) {
             $phone_info = $this->get_phone_info($id);
@@ -1604,7 +1570,7 @@ class endpointmanager {
                     $iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::SELF_FIRST);
                     // could use CHILD_FIRST if you so wish
                     foreach ($iterator as $file) {
-                        $dir = $write_path . str_replace(PHONE_MODULES_PATH . "endpoint/" . $phone_info['directory'] . "/" . $phone_info['cfg_dir'] . "/", "", dirname($file));
+                        $dir = $write_path . str_replace(PHONE_MODULES_PATH . "endpoint/" . $phone_info['directory'] . "/" . $phone_info['cfg_dir'] . "/", "", dirname((string) $file));
                         if (!file_exists($dir)) {
                             if (!@mkdir($dir, 0775, TRUE)) {
                                 $this->error['parse_configs'] = "Could Not Create Directory: " . $data;
@@ -1682,9 +1648,9 @@ class endpointmanager {
 				
 				
 				$additionalmacs = $globalcfgdata['data']['additionalmacs'];
-				$additionalmacs = explode(',', $additionalmacs);
+				$additionalmacs = explode(',', (string) $additionalmacs);
 				$additionalmacs_cs = $globalcfgdata_cs['data']['additionalmacs'];
-				$additionalmacs_cs = explode(',', $additionalmacs_cs);
+				$additionalmacs_cs = explode(',', (string) $additionalmacs_cs);
 				
 				$filelist = scandir($write_path);
 				
@@ -1699,7 +1665,7 @@ class endpointmanager {
 			
 				foreach($additionalmacs as $additionalmac) {
 				if ($additionalmac !== ""){
-						if (strpos($file, '_additional') !== false) {
+						if (str_contains((string) $file, '_additional')) {
 					$filesymlink = str_replace($phone_info['mac'],$additionalmac,$file);
 						$filesymlink = str_replace("_additional", "", "$filesymlink");
 						if (!file_exists($write_path . $filesymlink)) {
@@ -1712,7 +1678,7 @@ class endpointmanager {
 				}
 				foreach($additionalmacs_cs as $additionalmac) {
 				if ($additionalmac !== ""){
-						if (strpos($file, '_additional') !== false) {
+						if (str_contains((string) $file, '_additional')) {
 					$filesymlink = str_replace($phone_info['mac'],$additionalmac,$file);
 						$filesymlink = str_replace("_additional", "", "$filesymlink");
 						if (!file_exists($write_path . $filesymlink)) {
@@ -1907,13 +1873,13 @@ class endpointmanager {
                         $global_custom_cfg_ari = $global_custom_cfg_data['ari'];
                         $global_custom_cfg_data = $global_custom_cfg_data['data'];
                     } else {
-                        $global_custom_cfg_data = array();
-                        $global_custom_cfg_ari = array();
+                        $global_custom_cfg_data = [];
+                        $global_custom_cfg_ari = [];
                     }
                 }
 
-                $new_template_data = array();
-                $line_ops = array();
+                $new_template_data = [];
+                $line_ops = [];
                 if (is_array($global_custom_cfg_data)) {
                     foreach ($global_custom_cfg_data as $key => $data) {
                         //TODO: clean up with reg-exp
@@ -1950,7 +1916,7 @@ class endpointmanager {
                 if (!$write) {
                     $new_template_data['provision']['type'] = 'dynamic';
                     $new_template_data['provision']['protocol'] = 'http';
-                    $new_template_data['provision']['path'] = rtrim($settings['srvip'] . dirname($_SERVER['REQUEST_URI']) . '/', '/');
+                    $new_template_data['provision']['path'] = rtrim($settings['srvip'] . dirname((string) $_SERVER['REQUEST_URI']) . '/', '/');
                     $new_template_data['provision']['encryption'] = FALSE;
                 } else {
                     $new_template_data['provision']['type'] = 'file';
@@ -1964,9 +1930,9 @@ class endpointmanager {
                 //Overwrite all specific settings variables now
                 if (!empty($phone_info['specific_settings'])) {
                     $specific_settings = unserialize($phone_info['specific_settings']);
-                    $specific_settings = is_array($specific_settings) ? $specific_settings : array();
+                    $specific_settings = is_array($specific_settings) ? $specific_settings : [];
                 } else {
-                    $specific_settings = array();
+                    $specific_settings = [];
                 }
 
                 //Set Variables according to the template_data files included. We can include different template.xml files within family_data.xml also one can create
@@ -2021,40 +1987,8 @@ class endpointmanager {
                 //Loop through Lines!
                 $li = 0;
                 foreach ($phone_info['line'] as $line) {
-                    $line_options = is_array($line_ops[$line['line']]) ? $line_ops[$line['line']] : array();
-                    $line_statics = array(
-					'line' => $line['line'],
-					'username' => $line['ext'],
-					'authname' => $line['ext'],
-					'secret' => $line['secret'],
-					'displayname' => $line['description'],
-					'server_host' => $this->global_cfg['srvip'],
-					'server_port' => $line['server_port'],
-					'proto' => $line['proto'],
-					'user_extension' => $line['user_extension'],
-					'extension' => $line['ext'],
-					'allowedcodec' => $line['allowedcodec'],
-					'forcerport' => $line['forcerport'],
-					'media_encryption' => $line['media_encryption'],
-					'sipdriver' => $line['sipdriver'],
-					'transport' => $line['transport'],
-					'trustrpid' => $line['trustrpid'],
-					'callerid' => $line['callerid'],
-					'encryption' => $line['encryption'],							
-					'tech' => $line['tech'],
-					'ipei' => $line['ipei'],
-					'myvoicemail' => $provisioner_lib->settings['myvoicemail'],
-					'dnd_on' => $provisioner_lib->settings['dnd_on'],
-					'dnd_off' => $provisioner_lib->settings['dnd_off'],
-					'dnd_toggle' => $provisioner_lib->settings['dnd_toggle'],
-					'primtimeserver' => $this->global_cfg['ntp'],
-					'globaladminpassword' => $this->global_cfg['adminpass'],
-					'globaluserpassword' => $this->global_cfg['userpass'],
-					'provisuser' => $getSysadminSettings['provisuser']['value'],
-					'provispass' => $getSysadminSettings['provispass']['value'],
-					'sslhpro' => $getSysadminSettings['sslhpro']['value'],
-					'hpro' => $getSysadminSettings['hpro']['value']
-					);
+                    $line_options = is_array($line_ops[$line['line']]) ? $line_ops[$line['line']] : [];
+                    $line_statics = ['line' => $line['line'], 'username' => $line['ext'], 'authname' => $line['ext'], 'secret' => $line['secret'], 'displayname' => $line['description'], 'server_host' => $this->global_cfg['srvip'], 'server_port' => $line['server_port'], 'proto' => $line['proto'], 'user_extension' => $line['user_extension'], 'extension' => $line['ext'], 'allowedcodec' => $line['allowedcodec'], 'forcerport' => $line['forcerport'], 'media_encryption' => $line['media_encryption'], 'sipdriver' => $line['sipdriver'], 'transport' => $line['transport'], 'trustrpid' => $line['trustrpid'], 'callerid' => $line['callerid'], 'encryption' => $line['encryption'], 'tech' => $line['tech'], 'ipei' => $line['ipei'], 'myvoicemail' => $provisioner_lib->settings['myvoicemail'], 'dnd_on' => $provisioner_lib->settings['dnd_on'], 'dnd_off' => $provisioner_lib->settings['dnd_off'], 'dnd_toggle' => $provisioner_lib->settings['dnd_toggle'], 'primtimeserver' => $this->global_cfg['ntp'], 'globaladminpassword' => $this->global_cfg['adminpass'], 'globaluserpassword' => $this->global_cfg['userpass'], 'provisuser' => $getSysadminSettings['provisuser']['value'], 'provispass' => $getSysadminSettings['provispass']['value'], 'sslhpro' => $getSysadminSettings['sslhpro']['value'], 'hpro' => $getSysadminSettings['hpro']['value']];
 	
 
 					
@@ -2164,7 +2098,7 @@ class endpointmanager {
 
                 if (array_key_exists('data', $specific_settings)) {
                    foreach ($specific_settings['data'] as $key => $data) {
-                       $default_exp = preg_split("/\|/i", $key);
+                       $default_exp = preg_split("/\|/i", (string) $key);
                         if (isset($default_exp[2])) {
                             //lineloop
                             $var = $default_exp[2];
@@ -2322,11 +2256,11 @@ class endpointmanager {
      * Remove firmware from the Hard Drive
      * @param int $id Product ID
      */
-    function remove_firmware($id) {
+    function remove_firmware($id): void {
         $sql = "SELECT firmware_files FROM  endpointman_product_list WHERE  id =" . $id;
         $files = $this->eda->sql($sql, 'getOne');
 
-        $file_list = explode(",", $files);
+        $file_list = explode(",", (string) $files);
         $i = 0;
         foreach ($file_list as $file) {
             if (file_exists($this->global_cfg['config_location'] . $file)) {
@@ -2347,7 +2281,7 @@ class endpointmanager {
         if (!empty($_ENV['TEMP'])) {
             return realpath($_ENV['TEMP']);
         }
-        $tempfile = tempnam(uniqid(rand(), TRUE), '');
+        $tempfile = tempnam(uniqid(random_int(0, mt_getrandmax()), TRUE), '');
         if (file_exists($tempfile)) {
             unlink($tempfile);
             return realpath(dirname($tempfile));
@@ -2358,7 +2292,7 @@ class endpointmanager {
      * Install Firmware for the specified Product Line
      * @param <type> $product_id Product ID
      */
-    function install_firmware($product_id) {
+    function install_firmware($product_id): void {
         $temp_directory = $this->sys_get_temp_dir() . "/epm_temp/";
         $sql = 'SELECT endpointman_product_list.*, endpointman_brand_list.directory FROM endpointman_product_list, endpointman_brand_list WHERE endpointman_product_list.brand = endpointman_brand_list.id AND endpointman_product_list.id = ' . $product_id;
         $row = $this->eda->sql($sql, 'getRow', DB_FETCHMODE_ASSOC);
@@ -2630,7 +2564,7 @@ class endpointmanager {
 
                         $family_line_xml = $this->file2json(PHONE_MODULES_PATH . '/endpoint/' . $directory . '/' . $family_list['directory'] . '/family_data.json');
 
-                        $family_line_xml['data']['last_modified'] = isset($family_line_xml['data']['last_modified']) ? $family_line_xml['data']['last_modified'] : '';
+                        $family_line_xml['data']['last_modified'] ??= '';
 
                         /* DONT DO THIS YET
                           $require_firmware = NULL;
@@ -2699,7 +2633,7 @@ class endpointmanager {
      * This will download the xml & brand package remotely
      * @param integer $id Brand ID
      */
-    function download_brand($id) {
+    function download_brand($id): void {
         if (!$this->global_cfg['use_repo']) {
             $temp_directory = $this->sys_get_temp_dir() . "/epm_temp/";
 	    if (!file_exists($temp_directory)) {
@@ -2753,7 +2687,7 @@ class endpointmanager {
      * This will install or updated a brand package (which is the same thing to this)
      * Still needs way to determine when models move...perhaps another function?
      */
-    function update_brand($package, $remote=TRUE) {
+    function update_brand($package, $remote=TRUE): void {
 	if ($this->global_cfg['debug']) echo "update_brand(): Debug is set to ".$this->global_cfg['debug']." <br />";
 	$temp_directory = $this->sys_get_temp_dir() . "/epm_temp/";
         if ($this->global_cfg['debug']) echo "Processing ".$temp_directory.$package."/brand_data.json... <br />";
@@ -2785,11 +2719,11 @@ class endpointmanager {
                             echo ".";
                         }
                     } else {
-                        if ((basename($file) != "brand_data.json") OR (!$remote)) {
+                        if ((basename((string) $file) != "brand_data.json") OR (!$remote)) {
                             $dir = str_replace($temp_directory . $directory . "/", "", $file);
                             $stats = rename($file, PHONE_MODULES_PATH . "endpoint/" . $directory . "/" . $dir);
                             if ($stats === FALSE) {
-                                echo "Error Moving " . basename($file);
+                                echo "Error Moving " . basename((string) $file);
                             }
                             chmod(PHONE_MODULES_PATH . "endpoint/" . $directory . "/" . $dir, 0775);
                             echo ".";
@@ -2822,7 +2756,7 @@ class endpointmanager {
                     $last_mod = max($last_mod, $family_list['last_modified']);
 
                     $family_line_xml = $this->file2json(PHONE_MODULES_PATH . '/endpoint/' . $directory . '/' . $family_list['directory'] . '/family_data.json');
-                    $family_line_xml['data']['last_modified'] = isset($family_line_xml['data']['last_modified']) ? $family_line_xml['data']['last_modified'] : '';
+                    $family_line_xml['data']['last_modified'] ??= '';
 
                     $require_firmware = NULL;
                     if ((key_exists('require_firmware', $family_line_xml['data'])) && ($remote) && ($family_line_xml['data']['require_firmware'] == "TRUE")) {
@@ -2853,8 +2787,8 @@ class endpointmanager {
                             $global_custom_cfg_data = unserialize($data['global_custom_cfg_data']);
                             if ((is_array($global_custom_cfg_data)) AND (!array_key_exists('data', $global_custom_cfg_data))) {
                                 echo "----Old Data Detected! Migrating......";
-                                $new_data = array();
-                                $new_ari = array();
+                                $new_data = [];
+                                $new_ari = [];
                                 foreach ($global_custom_cfg_data as $key => $old_keys) {
                                     if (array_key_exists('value', $old_keys)) {
                                         $new_data[$key] = $old_keys['value'];
@@ -2866,7 +2800,7 @@ class endpointmanager {
                                         $new_ari[$key] = 1;
                                     }
                                 }
-                                $final_data = array();
+                                $final_data = [];
                                 $final_data['data'] = $new_data;
                                 $final_data['ari'] = $new_ari;
                                 $final_data = serialize($final_data);
@@ -2893,7 +2827,7 @@ class endpointmanager {
                             }
                             if ((is_array($global_user_cfg_data)) AND ($old_check)) {
                                 echo "Old Data Detected! Migrating......";
-                                $new_data = array();
+                                $new_data = [];
                                 foreach ($global_user_cfg_data as $key => $old_keys) {
                                     if (array_key_exists('value', $old_keys)) {
                                         $exploded = explode("_", $key);
@@ -2918,8 +2852,8 @@ class endpointmanager {
                             $global_custom_cfg_data = unserialize($data['global_custom_cfg_data']);
                             if ((is_array($global_custom_cfg_data)) AND (!array_key_exists('data', $global_custom_cfg_data))) {
                                 echo "Old Data Detected! Migrating......";
-                                $new_data = array();
-                                $new_ari = array();
+                                $new_data = [];
+                                $new_ari = [];
                                 foreach ($global_custom_cfg_data as $key => $old_keys) {
                                     if (array_key_exists('value', $old_keys)) {
                                         $new_data[$key] = $old_keys['value'];
@@ -2931,7 +2865,7 @@ class endpointmanager {
                                         $new_ari[$key] = 1;
                                     }
                                 }
-                                $final_data = array();
+                                $final_data = [];
                                 $final_data['data'] = $new_data;
                                 $final_data['ari'] = $new_ari;
                                 $final_data = serialize($final_data);
@@ -3004,7 +2938,7 @@ class endpointmanager {
      * Remove the brand
      * @param int $id Brand ID
      */
-    function remove_brand($id=NULL, $remove_configs=FALSE, $force=FALSE) {
+    function remove_brand($id=NULL, $remove_configs=FALSE, $force=FALSE): void {
         if (!$this->global_cfg['use_repo']) {
             $sql = 'SELECT id, firmware_vers FROM endpointman_product_list WHERE brand = ' . $id;
             $products = $this->eda->sql($sql, 'getall', DB_FETCHMODE_ASSOC);
@@ -3060,8 +2994,8 @@ class endpointmanager {
                     $category_name = $category['name'];
                     foreach ($category['subcategory'] as $subcategory) {
                         $subcategory_name = $subcategory['name'];
-                        $items_fin = array();
-                        $items_loop = array();
+                        $items_fin = [];
+                        $items_loop = [];
                         $break_count = 0;
                         foreach ($subcategory['item'] as $item) {
                             switch ($item['type']) {
@@ -3087,16 +3021,16 @@ class endpointmanager {
                                     break;
                                 case 'loop':
                                     for ($i = $item['loop_start']; $i <= $item['loop_end']; $i++) {
-                                        $name = explode("_", $item['data']['item'][0]['variable']);
+                                        $name = explode("_", (string) $item['data']['item'][0]['variable']);
                                         $var_nam = "loop|" . str_replace("\$", "", $name[0]) . "_" . $i;
                                         foreach ($item['data']['item'] as $item_loop) {
                                             if ($item_loop['type'] != 'break') {
-                                                $z_tmp = explode("_", $item_loop['variable']);
+                                                $z_tmp = explode("_", (string) $item_loop['variable']);
                                                 $z = $z_tmp[1];
                                                 $items_loop[$var_nam][$z] = $item_loop;
                                                 $items_loop[$var_nam][$z]['description'] = str_replace('{$count}', $i, $items_loop[$var_nam][$z]['description']);
                                                 $items_loop[$var_nam][$z]['variable'] = str_replace('_', '_' . $i . '_', $items_loop[$var_nam][$z]['variable']);
-                                                $items_loop[$var_nam][$z]['default_value'] = isset($items_loop[$var_nam][$z]['default_value']) ? $items_loop[$var_nam][$z]['default_value'] : '';
+                                                $items_loop[$var_nam][$z]['default_value'] ??= '';
                                                 $items_loop[$var_nam][$z]['loop'] = TRUE;
                                                 $items_loop[$var_nam][$z]['loop_count'] = $i;
                                             } elseif ($item_loop['type'] == 'break') {
@@ -3119,7 +3053,7 @@ class endpointmanager {
                         }
                         if (isset($data['data'][$category_name][$subcategory_name])) {
                             $old_sc = $data['data'][$category_name][$subcategory_name];
-                            $sub_cat_data[$category_name][$subcategory_name] = array();
+                            $sub_cat_data[$category_name][$subcategory_name] = [];
                             $sub_cat_data[$category_name][$subcategory_name] = array_merge($old_sc, $items_fin);
                         } else {
                             $sub_cat_data[$category_name][$subcategory_name] = $items_fin;
@@ -3128,7 +3062,7 @@ class endpointmanager {
                     if (isset($data['data'][$category_name])) {
                         $old_c = $data['data'][$category_name];
                         $new_c = $sub_cat_data[$category_name];
-                        $sub_cat_data[$category_name] = array();
+                        $sub_cat_data[$category_name] = [];
                         $data['data'][$category_name] = array_merge($old_c, $new_c);
                     } else {
                         $data['data'][$category_name] = $sub_cat_data[$category_name];
@@ -3189,7 +3123,7 @@ class endpointmanager {
             $sql = "UPDATE endpointman_model_list SET max_lines = '" . $maxlines . "', template_list = '" . $template_list . "' WHERE id = '" . $model . "'";
             $this->eda->sql($sql);
 
-            $version = isset($family_line_json['data']['last_modified']) ? $family_line_json['data']['last_modified'] : '';
+            $version = $family_line_json['data']['last_modified'] ?? '';
             $long_name = $family_line_json['data']['name'];
             $short_name = preg_replace("/\[(.*?)\]/si", "", $family_line_json['data']['name']);
             $configuration_files = $family_line_json['data']['configuration_files'];
@@ -3197,7 +3131,7 @@ class endpointmanager {
             $sql = "UPDATE endpointman_product_list SET long_name = '" . $long_name . "', short_name = '" . $short_name . "' , cfg_ver = '" . $version . "' WHERE id = '" . $product_row['id'] . "'";
             $this->eda->sql($sql);
 
-            $template_data_array = array();
+            $template_data_array = [];
 
             $template_data_array = $this->merge_data(PHONE_MODULES_PATH . '/endpoint/' . $brand_row['directory'] . '/' . $product_row['cfg_dir'] . '/', $template_list_array);
 
@@ -3214,26 +3148,24 @@ class endpointmanager {
      * search haystack for needle and return an array of the key path, FALSE otherwise.
      * if NeedleKey is given, return only for this key mixed ArraySearchRecursive(mixed Needle,array Haystack[,NeedleKey[,bool Strict[,array Path]]])
      * @author ob (at) babcom (dot) biz
-     * @param mixed $Needle
      * @param array $Haystack
-     * @param mixed $NeedleKey
      * @param bool $Strict
      * @param array $Path
      * @return array
      * @package epm_system
      */
-    function arraysearchrecursive($Needle, $Haystack, $NeedleKey="", $Strict=false, $Path=array()) {
+    function arraysearchrecursive(mixed $Needle, $Haystack, mixed $NeedleKey="", $Strict=false, $Path=[]) {
         if (!is_array($Haystack))
             return false;
         foreach ($Haystack as $Key => $Val) {
             if (is_array($Val) &&
                     $SubPath = $this->arraysearchrecursive($Needle, $Val, $NeedleKey, $Strict, $Path)) {
-                $Path = array_merge($Path, Array($Key), $SubPath);
+                $Path = array_merge($Path, [$Key], $SubPath);
                 return $Path;
             } elseif ((!$Strict && $Val == $Needle &&
-                    $Key == (strlen($NeedleKey) > 0 ? $NeedleKey : $Key)) ||
+                    $Key == (strlen((string) $NeedleKey) > 0 ? $NeedleKey : $Key)) ||
                     ($Strict && $Val === $Needle &&
-                    $Key == (strlen($NeedleKey) > 0 ? $NeedleKey : $Key))) {
+                    $Key == (strlen((string) $NeedleKey) > 0 ? $NeedleKey : $Key))) {
                 $Path[] = $Key;
                 return $Path;
             }
@@ -3274,10 +3206,10 @@ class endpointmanager {
     */
     function download_file_with_progress_bar($url_file, $destination_file) {
         set_time_limit(0);
-        $headers = get_headers($url_file, 1);
+        $headers = get_headers($url_file, true);
         $size = $headers['Content-Length'];
 
-        if (preg_match('/200/', $headers[0])) {
+        if (preg_match('/200/', (string) $headers[0])) {
             $pid = $this->run_in_background("wget " . $url_file . " -O " . $destination_file);
 
             while ($this->is_process_running($pid)) {
@@ -3365,7 +3297,7 @@ class endpointmanager {
      * @version 2.11
      * @package epm_system
      */
-    function rmrf($dir) {
+    function rmrf($dir): void {
         if (file_exists($dir)) {
             $iterator = new RecursiveDirectoryIterator($dir);
             foreach (new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::CHILD_FIRST) as $file) {
@@ -3507,11 +3439,10 @@ class endpointmanager {
      * http://www.pbxinaflash.com/community/index.php?threads/end-point-configuration-manager-module-for-freepbx-part-1.4514/page-4#post-37671
      *
      * @version 2.11
-     * @param mixed $netmask The netmask, eg [1.1.1.1/24]
      * @param boolean $use_nmap True use nmap, false don't use it
      * @return array List of devices found on the network
      */
-    function discover_new($netmask, $use_nmap=TRUE) {
+    function discover_new(mixed $netmask, $use_nmap=TRUE) {
         if (($use_nmap) AND (file_exists($this->global_cfg['nmap_location'])) AND ($this->validate_netmask($netmask))) {
             shell_exec($this->global_cfg['nmap_location'] . ' -v -sP ' . $netmask);
         } elseif (!$this->validate_netmask($netmask)) {
@@ -3540,12 +3471,12 @@ class endpointmanager {
         foreach ($temp as $key => &$value) {
 
             //Pull out the IP address from row. It's always the first entry in the row and it can only be a max of 15 characters with the delimiters
-            preg_match_all("/\((.*?)\)/", $value, $matches);
+            preg_match_all("/\((.*?)\)/", (string) $value, $matches);
             $ip = $matches[1];
             $ip = $ip[0];
 
             //Pull out the mac address by looking for the delimiter
-            $mac = substr($value, (strpos($value, ":") - 2), 17);
+            $mac = substr((string) $value, (strpos((string) $value, ":") - 2), 17);
 
             //Get rid of the delimiter
             $mac_strip = strtoupper(str_replace(":", "", $mac));
@@ -3574,7 +3505,7 @@ class endpointmanager {
                 $epm =  $this->eda->sql($count_sql, 'getOne');
 
                 //Add into a final array
-                $final[$z] = array("ip" => $ip, "mac" => $mac, "mac_strip" => $mac_strip, "oui" => $oui, "brand" => $brand['name'], "brand_id" => $brand['id'], "endpoint_managed" => $epm);
+                $final[$z] = ["ip" => $ip, "mac" => $mac, "mac_strip" => $mac_strip, "oui" => $oui, "brand" => $brand['name'], "brand_id" => $brand['id'], "endpoint_managed" => $epm];
                 $z++;
             }
         }
@@ -3714,7 +3645,7 @@ class endpointmanager {
         }
 
         $i = 1;
-        $temp = array();
+        $temp = [];
         foreach ($result as $row) {
             $temp[$i]['value'] = $row['id'];
             $temp[$i]['text'] = $row['id'] . " --- " . $row['description'];
@@ -3837,9 +3768,9 @@ function endpointman_update_progress_bar($out) {
 
 function endpointmanager_read_header($ch, $string) {
     global $file_size, $fout;
-    $length = strlen($string);
+    $length = strlen((string) $string);
     $regs = "";
-    preg_match("/(Content-Length:) (.*)/i", $string, $regs);
+    preg_match("/(Content-Length:) (.*)/i", (string) $string, $regs);
     if ((isset($regs[2])) AND ($regs[2] <> "")) {
         $file_size = intval($regs[2]);
     }
@@ -3850,7 +3781,7 @@ function endpointmanager_read_header($ch, $string) {
 
 function endpointmanager_read_body($ch, $string) {
     global $fout, $file_size, $downloaded, $lastseen, $progress_bar;
-    $length = strlen($string);
+    $length = strlen((string) $string);
     $downloaded += intval($length);
     $downloadProgress = round(100 * (1 - $downloaded / $file_size), 0);
     $downloadProgress = 100 - $downloadProgress;
@@ -3861,7 +3792,7 @@ function endpointmanager_read_body($ch, $string) {
         $lastseen = $downloadProgress;
     }
     if ($fout)
-        fwrite($fout, $string);
+        fwrite($fout, (string) $string);
     //ob_flush();
     endpointman_flush_buffers();
     return $length;

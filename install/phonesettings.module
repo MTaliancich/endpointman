@@ -70,7 +70,7 @@ class phonesettings {
         $endpoint = new endpointmanager();
 
         $sql = "SELECT mac_id, line FROM endpointman_line_list WHERE ext = '".$_SESSION['ari_user']['extension']."' ";
-        $mac_row = $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+        $mac_row = $endpoint->db->getRow($sql, [], DB_FETCHMODE_ASSOC);
 
         $mac_id = $mac_row['mac_id'];
         $line = $mac_row['line'];
@@ -92,12 +92,12 @@ class phonesettings {
                 $custom_cfg_data_data = $custom_cfg_data2['data'];
                 $custom_cfg_data_ari = $custom_cfg_data2['ari'];
             } else {
-                $custom_cfg_data_data = array();
-                $custom_cfg_data_ari = array();
+                $custom_cfg_data_data = [];
+                $custom_cfg_data_ari = [];
             }
         }
 
-        $custom_cfg_data = array();
+        $custom_cfg_data = [];
         foreach($custom_cfg_data_ari as $key => $data) {
             if(isset($_REQUEST[$key])) {
                 $custom_cfg_data[$key] = $_REQUEST[$key];
@@ -112,7 +112,7 @@ class phonesettings {
         //refresh the data before we prepare so we get acurate data
         $row['global_user_cfg_data'] = $custom_cfg_data;
 
-        $reboot = isset($_REQUEST['epm_reboot'])?$_REQUEST['epm_reboot']:null;
+        $reboot = $_REQUEST['epm_reboot'] ?? null;
 
         if(isset($reboot)) {
             $endpoint->prepare_configs($row);
@@ -159,7 +159,7 @@ class phonesettings {
         $res = $endpoint->db->query($sql);
         if(count($res)) {
 
-            $mac_row = $endpoint->db->getRow($sql, array(), DB_FETCHMODE_ASSOC);
+            $mac_row = $endpoint->db->getRow($sql, [], DB_FETCHMODE_ASSOC);
 
             $mac_id = $mac_row['mac_id'];
             $line = $mac_row['line'];

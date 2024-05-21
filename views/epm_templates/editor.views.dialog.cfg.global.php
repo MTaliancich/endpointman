@@ -3,7 +3,7 @@
 	$product_list = "SELECT * FROM endpointman_product_list WHERE id > 0";
 	$product_list =& sql($product_list,'getAll', DB_FETCHMODE_ASSOC);
 	*/
-	
+
     //Because we are working with global variables we probably updated them, so lets refresh those variables
     //$endpoint->global_cfg = $endpoint->eda->sql("SELECT var_name, value FROM endpointman_global_vars",'getAssoc');	
 ?>
@@ -20,8 +20,8 @@
 			<div class="modal-body">
 				<form action="" id="FormCfgGlobalTemplate" name="FormCfgGlobalTemplate">
 
-           
-           
+
+
 <div class="section-title" data-for="setting_provision">
 	<h3><i class="fa fa-minus"></i><?php echo _("Setting Provision") ?></h3>
 </div>
@@ -172,7 +172,7 @@
         							<button class="btn btn-default" type="button" id='autodetectntp' onclick="epm_global_input_value_change_bt('#ntp_server', sValue = '<?php echo $_SERVER["SERVER_ADDR"]; ?>');"><i class='fa fa-search'></i> <?php echo _("Use me!")?></button>
       							</span>
     						</div>
-							
+
 						</div>
 					</div>
 				</div>

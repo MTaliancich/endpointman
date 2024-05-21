@@ -30,7 +30,7 @@ if ((! isset($_REQUEST['subpage'])) || ($_REQUEST['subpage'] == "")) {
 	<h1><?php echo _("End Point Configuration Manager")?></h1>
 	<?php 
 	foreach($epm->myShowPage() as $key => $page) {
-		if (strtolower($_REQUEST['subpage']) == $key) 
+		if (strtolower((string) $_REQUEST['subpage']) == $key) 
 		{
 		?>
 		<h2><?php echo $page['name']; ?></h2>

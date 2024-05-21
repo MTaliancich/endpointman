@@ -30,7 +30,7 @@ $epm = FreePBX::create()->Endpointman;
             <div class="col-sm-12">
                 <div class="fpbx-container">
                 <?php
-					echo load_view(__DIR__.'/views/epm_config_manager.page.php', array('epm' => $epm));
+					echo load_view(__DIR__.'/views/epm_config_manager.page.php', ['epm' => $epm]);
 				?>
                 </div>
             </div>
